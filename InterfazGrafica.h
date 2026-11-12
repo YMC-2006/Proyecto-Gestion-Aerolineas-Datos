@@ -35,6 +35,9 @@ private:
 	void mostrarPantallaPrincipal();
 	void mostrarPantallaCliente();
 	void mostrarPantallaAdministrador();
+	void mostrarPantallaAeronaves();
+	void mostrarPantallaCiudades();
+	void mostrarPantallaRutas();
 	
 public:
 	InterfazGrafica(int ancho, int alto,const char* titulo);
