@@ -55,8 +55,16 @@ void InterfazGrafica::mostrarPantallaPrincipal(){
 
 void InterfazGrafica::mostrarPantallaAdministrador(){
 	DrawTexture(fondoRegistros, 0, 0, WHITE);
+
+	DrawText("ADMINISTRACION", 365, 176, 40, BLUE);
+
+	Rectangle btnAeronaves = {380, 290, 300, 60};
+	Rectangle btnRutas = {380, 390, 300, 60};
+	DrawRectangleRec(btnAeronaves, BLUE);
+	DrawRectangleRec(btnRutas, BLUE);
 	
-	//Rectangle btn
+	DrawText("AERONAVES", 434, 305, 30, WHITE);
+	DrawText("RUTAS", 479, 405, 30, WHITE);
 }
 
 
