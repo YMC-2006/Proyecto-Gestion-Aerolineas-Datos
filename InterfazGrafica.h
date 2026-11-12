@@ -8,13 +8,19 @@ class InterfazGrafica {
 	
 private:
 	
+	// fondos
 	int anchoPantalla, altoPantalla;
 	Pantalla pantallaActual = PRINCIPAL;
 	Texture2D fondo;
 	
 	
+	
+	// Botones del sistema
 	Texture2D btnCliente; 
 	Texture2D btnAdministrador;
+	
+	
+	// Texto
 	
 	
 	Music musica;

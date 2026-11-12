@@ -12,8 +12,8 @@ public:
 	GestorAdministrativo();
 	~GestorAdministrativo();
 
-	bool registrarCiudad(int id, nombre);
-	bool modificarCiudad(int id, nombre);
+	bool registrarCiudad(int id, string nombre);
+	bool modificarCiudad(int id, string nombre);
 	bool eliminarCiudad(int id);
 
 	bool registrarRuta(int idOrigen, int idDestino, double costo, int duracionMinutos);
