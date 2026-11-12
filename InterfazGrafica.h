@@ -12,6 +12,7 @@ private:
 	int anchoPantalla, altoPantalla;
 	Pantalla pantallaActual = PRINCIPAL;
 	Texture2D fondo;
+	Texture2D fondoRegistros;
 	
 	
 	

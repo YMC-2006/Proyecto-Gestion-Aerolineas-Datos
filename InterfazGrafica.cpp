@@ -23,6 +23,7 @@ InterfazGrafica::~InterfazGrafica(){
 
 void InterfazGrafica::cargarAssets(){
 	fondo = LoadTexture("assets/fondoPantallaPrincipal.png");
+	fondoRegistros=LoadTexture("assets/vistaConCuadritoParaRegistros.png");
 }
 
 void InterfazGrafica::liberarAssets(){
@@ -40,6 +41,22 @@ void InterfazGrafica::mostrarPantallaPrincipal(){
 	DrawRectangleRec(btnAdministrador, WHITE);
 	DrawText("Administrador", 630, 420, 30, BLUE);
 	
+	//detectar clicks
+	//si detecto el boton izquierdo del mouse
+	if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
+		Vector2 mouse=GetMousePosition();
+		
+		if(CheckCollisionPointRec(mouse, btnAdministrador)){
+			pantallaActual=ADMINISTRATIVO;
+		}
+	}
+
+}
+
+void InterfazGrafica::mostrarPantallaAdministrador(){
+	DrawTexture(fondoRegistros, 0, 0, WHITE);
+	
+	//Rectangle btn
 }
 
 
@@ -51,6 +68,9 @@ void InterfazGrafica::empezar(){
 		
 		if(pantallaActual == PRINCIPAL){
 			mostrarPantallaPrincipal();
+		}
+		if(pantallaActual == ADMINISTRATIVO){
+			mostrarPantallaAdministrador();
 		}
 		
 		
