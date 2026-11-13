@@ -15,6 +15,9 @@ InterfazGrafica::InterfazGrafica(int ancho, int alto,const char* titulo){
 	btnCliente = { 700, 500, 180, 50 };
 	btnAdministrador = { 900, 500, 180, 50 };
 	
+	comboOrigen = ListaDesplegable(700, 150, 250, 40);
+	comboDestino = ListaDesplegable(1000, 150, 250, 40);
+	
 }
 
 InterfazGrafica::~InterfazGrafica(){
@@ -34,13 +37,16 @@ void InterfazGrafica::liberarAssets(){
 void InterfazGrafica::mostrarPantallaPrincipal(){
 	DrawTexture(fondo, 0, 0, WHITE);
 	
-	Rectangle btnCliente = {300, 400, 260, 60};
+	Rectangle btnCliente = {350, 400, 260, 60};
 	DrawRectangleRec(btnCliente, WHITE);
-	DrawText("Cliente", 380, 420, 30, BLUE);
+	DrawText("Cliente", 400, 420, 30, BLUE);
 	
-	Rectangle btnAdministrador = {600, 400, 260, 60};
+	Rectangle btnAdministrador = {650, 400, 260, 60};
 	DrawRectangleRec(btnAdministrador, WHITE);
-	DrawText("Administrador", 630, 420, 30, BLUE);
+	DrawText("Administrador", 680, 420, 30, BLUE);
+	
+	
+	DrawText("GESTION DE VUELOS", 300, 100, 60, WHITE);
 	
 	//detectar clicks
 	//si detecto el boton izquierdo del mouse
@@ -49,6 +55,14 @@ void InterfazGrafica::mostrarPantallaPrincipal(){
 		
 		if(CheckCollisionPointRec(mouse, btnAdministrador)){
 			pantallaActual=ADMINISTRATIVO;
+		}
+	}
+	
+	if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
+		Vector2 mouse = GetMousePosition();
+		if(CheckCollisionPointRec(mouse, btnCliente)){
+			cargarCombosCliente();
+			pantallaActual = CLIENTE;
 		}
 	}
 
@@ -174,6 +188,89 @@ void InterfazGrafica::mostrarPantallaRutas(){
 	}
 }
 
+
+// ============================= CLIENTE YULI :P ====================================
+// Llena las listas de origen y destino.
+// Se llama una vez, al entrar a la pantalla del cliente.
+void InterfazGrafica::cargarCombosCliente(){
+	comboOrigen.limpiar();
+	comboDestino.limpiar();
+	
+	// DATOS DE PRUEBA (cambiar por las ciudades del grafo cuando esté listo)
+	string ciudadesPrueba[6] = {"San Jose", "Limon", "Liberia", "Puntarenas", "Cartago", "Perez Zeledon"};
+	
+	for(int i = 0; i < 6; i++){
+		comboOrigen.agregarOpcion(ciudadesPrueba[i]);
+		comboDestino.agregarOpcion(ciudadesPrueba[i]);
+	}
+}
+
+
+
+void InterfazGrafica::mostrarPantallaCliente(){
+	
+	ClearBackground(WHITE);
+	
+	Rectangle encabezado = {0, 0, 1300, 70};
+	DrawRectangleRec(encabezado, BLUE);
+	DrawText("Seleccion de viaje", 500, 10, 40, WHITE);
+	
+
+	Rectangle btnVolver = {10, 10, 200, 50};
+	DrawRectangleLines(10, 10, 150, 50, WHITE);
+	DrawText("VOLVER", 25, 25, 25, WHITE);
+	
+	if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
+		Vector2 mouse = GetMousePosition();
+		if(CheckCollisionPointRec(mouse, btnVolver)){
+			pantallaActual = PRINCIPAL;
+		}
+	}
+	
+	Rectangle machoteMapa = {50, 100, 600,400};
+	DrawRectangleRounded(machoteMapa, 0.1, 0, BLUE);
+	DrawText("MAPA", 70, 120, 40, WHITE);
+	
+	DrawCircle(100, 250, 10, WHITE);
+	
+	
+	DrawText("BUSCAR POR: ", 900, 300, 20, BLACK);
+	DrawText("COSTO", 800, 350, 20, BLACK);
+	DrawText("TIEMPO", 1090, 350, 20, BLACK);
+	
+	DrawText("DESDE", 700, 120, 20, BLACK);
+	DrawText("HASTA",1000, 120, 20, BLACK);
+	
+	// esto es porque solo uno puede estar abierto a la vez
+	if(!comboDestino.estaAbierta()){
+		comboOrigen.actualizar();
+	}
+	if(!comboOrigen.estaAbierta()){
+		comboDestino.actualizar();
+	}
+	
+	
+	comboDestino.dibujar();
+	comboOrigen.dibujar();
+
+	
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 void InterfazGrafica::empezar(){
 	
 	while (!WindowShouldClose()){
@@ -194,6 +291,8 @@ void InterfazGrafica::empezar(){
 		}
 		else if(pantallaActual == RUTAS){
 			mostrarPantallaRutas();
+		}else if(pantallaActual == CLIENTE){
+			mostrarPantallaCliente();
 		}
 		
 		

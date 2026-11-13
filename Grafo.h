@@ -2,6 +2,7 @@
 #define GRAFO_H
 
 #include "Ciudad.h"
+#include "Arista.h"
 
 using namespace std;
 class Grafo {

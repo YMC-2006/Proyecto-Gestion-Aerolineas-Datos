@@ -6,7 +6,7 @@
 int main(void){
 	
 	
-	InterfazGrafica sistema(1200, 850, "Sistema de gestion de vuelos");
+	InterfazGrafica sistema(1300, 900, "Sistema de gestion de vuelos");
 	sistema.empezar();
 	
 	

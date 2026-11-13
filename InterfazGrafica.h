@@ -2,6 +2,7 @@
 #define INTERFAZGRAFICA_H
 #include "raylib.h"
 #include "Pantalla.h"
+#include "ListaDesplegable.h"
 
 
 class InterfazGrafica {
@@ -19,6 +20,10 @@ private:
 	// Botones del sistema
 	Texture2D btnCliente; 
 	Texture2D btnAdministrador;
+	
+	// Combos para la vista del cliente
+	ListaDesplegable comboOrigen;
+	ListaDesplegable comboDestino;
 	
 	
 	// Texto
@@ -38,6 +43,10 @@ private:
 	void mostrarPantallaAeronaves();
 	void mostrarPantallaCiudades();
 	void mostrarPantallaRutas();
+	
+	
+	// funciones de la vista del CLIENTE
+	void cargarCombosCliente();
 	
 public:
 	InterfazGrafica(int ancho, int alto,const char* titulo);
