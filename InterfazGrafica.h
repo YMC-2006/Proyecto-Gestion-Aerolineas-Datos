@@ -4,25 +4,35 @@
 #include "Pantalla.h"
 #include "ListaDesplegable.h"
 #include "GestorAdministrativo.h"
+#include "Grafo.h"
+#include "Criterio.h"
 
 
 class InterfazGrafica {
 	
 private:
-	GestorAdministrativo gestor;
+	GestorAdministrativo gestorAdmin;
+	GestorAdministrativo gestorCliente;
 	string camposCiudad[3]; // Nombre, X, Y.
 	string camposAeronave[4]; // Placa, capacidad, marca, modelo.
 	int campoCiudadActivo = -1;
 	int campoAeronaveActivo = -1;
 	string mensajeCiudad;
 	string mensajeAeronave;
+	Grafo grafo;
+	Criterio criterioBusqueda;
+	string mensajeCliente;
+	
+	
+	
+	
 	
 	// fondos
 	int anchoPantalla, altoPantalla;
 	Pantalla pantallaActual = PRINCIPAL;
 	Texture2D fondo;
 	Texture2D fondoRegistros;
-	
+	Rectangle mapaCliente;
 	
 	
 	// Botones del sistema
@@ -55,6 +65,12 @@ private:
 	
 	// funciones de la vista del CLIENTE
 	void cargarCombosCliente();
+	void dibujarMapaCliente();
+	void dibujarRutasMapa();
+	void dibujarCiudadesMapa();
+	Vector2 posicionEnMapa(Ciudad& ciudad);
+	void dibujarBotonOpcion(Rectangle boton, const char* texto, bool seleccionado);
+	void buscarRutaCliente();
 	
 public:
 	InterfazGrafica(int ancho, int alto,const char* titulo);

@@ -25,6 +25,9 @@ public:
 	bool obtenerAeronavePorIndice(int indice, Aeronave& resultado);
 	bool modificarCiudad(int id, string nombre);
 	bool eliminarCiudad(int id);
+	
+	// funcion que ocupo en el cliente :p
+	Grafo* getGrafo();
 
 	bool registrarRuta(int idOrigen, int idDestino, double costo, int duracionMinutos);
 	bool modificarRuta(int idOrigen, int idDestino, double costo, int duracionMinutos);

@@ -9,6 +9,7 @@ struct Aeronave {
 	int capacidad;
 	string marca;
 	string modelo;
+	//falta año
 };
 
 #endif

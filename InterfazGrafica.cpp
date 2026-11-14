@@ -6,6 +6,40 @@ using namespace std;
 #include <climits>
 #include <cmath>
 
+
+
+InterfazGrafica::InterfazGrafica(int ancho, int alto,const char* titulo){
+	
+	anchoPantalla = ancho;
+	altoPantalla = alto;
+	
+	InitWindow(anchoPantalla, altoPantalla, titulo);
+	InitAudioDevice();
+	cargarAssets();
+	
+	comboOrigen = ListaDesplegable(700, 150, 250, 40);
+	comboDestino = ListaDesplegable(1000, 150, 250, 40);
+	
+	mapaCliente = {50, 100, 600, 400};
+	criterioBusqueda = POR_COSTO;
+	mensajeCliente = "";
+	
+}
+
+InterfazGrafica::~InterfazGrafica(){
+	
+}
+
+void InterfazGrafica::cargarAssets(){
+	fondo = LoadTexture("assets/fondoPantallaPrincipal.png");
+	fondoRegistros=LoadTexture("assets/vistaConCuadritoParaRegistros.png");
+}
+
+void InterfazGrafica::liberarAssets(){
+	UnloadTexture(fondo);
+	UnloadTexture(fondoRegistros);
+}
+
 // Un solo campo recibe el teclado. Tab cambia al siguiente.
 void editarCampos(string textos[], Rectangle cajas[], int cantidad, int& activo){
 	if(cantidad <= 0){
@@ -174,33 +208,6 @@ void editarCampos(string textos[], Rectangle cajas[], int cantidad, int& activo)
 	}
 	
 
-InterfazGrafica::InterfazGrafica(int ancho, int alto,const char* titulo){
-	
-	anchoPantalla = ancho;
-	altoPantalla = alto;
-	
-	InitWindow(anchoPantalla, altoPantalla, titulo);
-	InitAudioDevice();
-	cargarAssets();
-
-	comboOrigen = ListaDesplegable(700, 150, 250, 40);
-	comboDestino = ListaDesplegable(1000, 150, 250, 40);
-	
-}
-
-InterfazGrafica::~InterfazGrafica(){
-
-}
-
-void InterfazGrafica::cargarAssets(){
-	fondo = LoadTexture("assets/fondoPantallaPrincipal.png");
-	fondoRegistros=LoadTexture("assets/vistaConCuadritoParaRegistros.png");
-}
-
-void InterfazGrafica::liberarAssets(){
-	UnloadTexture(fondo);
-	UnloadTexture(fondoRegistros);
-}
 
 void InterfazGrafica::mostrarPantallaPrincipal(){
 	DrawTexture(fondo, 0, 0, WHITE);
@@ -288,7 +295,7 @@ void InterfazGrafica::mostrarPantallaAeronaves(){
 	DrawText("REGISTRAR", 590, 525, 25, WHITE);
 	DrawText(mensajeAeronave.c_str(), 270, 580, 18, DARKBLUE);
 	
-	int cantidad = gestor.obtenerCantidadAeronaves();
+	int cantidad = gestorAdmin.obtenerCantidadAeronaves();
 	string mensaje = "Aeronaves registradas: " + to_string(cantidad) + " / 50";
 	DrawText(mensaje.c_str(), 270, 610, 20, BLUE);
 	
@@ -298,7 +305,7 @@ void InterfazGrafica::mostrarPantallaAeronaves(){
 			int capacidad;
 			if(!leerCapacidad(camposAeronave[1], capacidad)){
 				mensajeAeronave = "La capacidad debe ser un entero mayor que cero.";
-			}else if(gestor.registrarAeronave(camposAeronave[0], capacidad,camposAeronave[2], camposAeronave[3])){
+			}else if(gestorAdmin.registrarAeronave(camposAeronave[0], capacidad,camposAeronave[2], camposAeronave[3])){
 				mensajeAeronave = "Aeronave registrada correctamente.";
 				//limpiamos los campos despues de registrar la nave para que queden limpios por si queremos registrar otro 
 				for(int i = 0; i < 4; i++){
@@ -329,7 +336,7 @@ void InterfazGrafica::mostrarPantallaCiudades(){
 	DrawText(mensajeCiudad.c_str(), 270, 580, 18, DARKBLUE);
 	
 	
-	int cantidad = gestor.obtenerCantidadCiudades();
+	int cantidad = gestorAdmin.obtenerCantidadCiudades();
 	string mensaje = "Ciudades registradas: " + to_string(cantidad) + " / 50";
 	DrawText(mensaje.c_str(), 270, 610, 20, BLUE);
 	
@@ -352,7 +359,7 @@ void InterfazGrafica::mostrarPantallaCiudades(){
 			}else if(y < 0 || y > 400){
 				mensajeCiudad = "Y debe estar entre 0 y 400.";
 			}else{
-				bool registrada = gestor.registrarCiudad(camposCiudad[0], x, y);
+				bool registrada = gestorAdmin.registrarCiudad(camposCiudad[0], x, y);
 				
 				if(registrada){
 					mensajeCiudad = "Ciudad registrada correctamente.";
@@ -404,56 +411,54 @@ void InterfazGrafica::mostrarPantallaRutas(){
 // ============================= CLIENTE YULI :P ====================================
 // Llena las listas de origen y destino.
 // Se llama una vez, al entrar a la pantalla del cliente.
+
 void InterfazGrafica::cargarCombosCliente(){
 	comboOrigen.limpiar();
 	comboDestino.limpiar();
 	
-	// DATOS DE PRUEBA (cambiar por las ciudades del grafo cuando esté listo)
-	string ciudadesPrueba[6] = {"San Jose", "Limon", "Liberia", "Puntarenas", "Cartago", "Perez Zeledon"};
 	
-	for(int i = 0; i < 6; i++){
-		comboOrigen.agregarOpcion(ciudadesPrueba[i]);
-		comboDestino.agregarOpcion(ciudadesPrueba[i]);
+	int cantidad = gestorAdmin.obtenerCantidadCiudades();
+	for(int i = 0; i < cantidad; i++){
+		Ciudad c;
+		if(gestorAdmin.obtenerCiudadPorIndice(i, c)){
+			comboOrigen.agregarOpcion(c.getNombre());
+			comboDestino.agregarOpcion(c.getNombre());
+		}
 	}
 }
-
 
 
 void InterfazGrafica::mostrarPantallaCliente(){
 	
 	ClearBackground(WHITE);
-	
+
 	Rectangle encabezado = {0, 0, 1300, 70};
 	DrawRectangleRec(encabezado, BLUE);
 	DrawText("Seleccion de viaje", 500, 10, 40, WHITE);
 	
-
-	Rectangle btnVolver = {10, 10, 200, 50};
-	DrawRectangleLines(10, 10, 150, 50, WHITE);
+	Rectangle btnVolver = {10, 10, 150, 50};
+	DrawRectangleLinesEx(btnVolver, 2, WHITE);
 	DrawText("VOLVER", 25, 25, 25, WHITE);
 	
-	if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
-		Vector2 mouse = GetMousePosition();
-		if(CheckCollisionPointRec(mouse, btnVolver)){
-			pantallaActual = PRINCIPAL;
-		}
-	}
+	// mapa con las ciudades y rutas registradas
+	dibujarMapaCliente();
 	
-	Rectangle machoteMapa = {50, 100, 600,400};
-	DrawRectangleRounded(machoteMapa, 0.1, 0, BLUE);
-	DrawText("MAPA", 70, 120, 40, WHITE);
-	
-	DrawCircle(100, 250, 10, WHITE);
-	
-	
-	DrawText("BUSCAR POR: ", 900, 300, 20, BLACK);
-	DrawText("COSTO", 800, 350, 20, BLACK);
-	DrawText("TIEMPO", 1090, 350, 20, BLACK);
-	
+	// panel de busqueda
 	DrawText("DESDE", 700, 120, 20, BLACK);
-	DrawText("HASTA",1000, 120, 20, BLACK);
+	DrawText("HASTA", 1000, 120, 20, BLACK);
 	
-	// esto es porque solo uno puede estar abierto a la vez
+	Rectangle btnCosto = {700, 330, 250, 45};
+	Rectangle btnTiempo = {1000, 330, 250, 45};
+	Rectangle btnBuscar = {800, 410, 350, 55};
+	
+	dibujarBotonOpcion(btnCosto, "MAS BARATA", criterioBusqueda == POR_COSTO);
+	dibujarBotonOpcion(btnTiempo, "MAS RAPIDA", criterioBusqueda == POR_TIEMPO);
+	
+	DrawRectangleRec(btnBuscar, DARKBLUE);
+	DrawText("BUSCAR RUTA", btnBuscar.x + 80, btnBuscar.y + 15, 26, WHITE);
+	
+	DrawText(mensajeCliente.c_str(), 700, 490, 20, RED);
+	
 	if(!comboDestino.estaAbierta()){
 		comboOrigen.actualizar();
 	}
@@ -461,11 +466,143 @@ void InterfazGrafica::mostrarPantallaCliente(){
 		comboDestino.actualizar();
 	}
 	
+
+	// clics de los botones
+	bool hayListaAbierta = comboOrigen.estaAbierta() || comboDestino.estaAbierta();
 	
+	if(!hayListaAbierta && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
+		Vector2 mouse = GetMousePosition();
+		
+		if(CheckCollisionPointRec(mouse, btnVolver)){
+			pantallaActual = PRINCIPAL;
+		}
+		else if(CheckCollisionPointRec(mouse, btnCosto)){
+			criterioBusqueda = POR_COSTO;
+		}
+		else if(CheckCollisionPointRec(mouse, btnTiempo)){
+			criterioBusqueda = POR_TIEMPO;
+		}
+		else if(CheckCollisionPointRec(mouse, btnBuscar)){
+			buscarRutaCliente();
+		}
+	}
+	
+	
+	// las listas van de ultimo para que queden encima de todo
 	comboDestino.dibujar();
 	comboOrigen.dibujar();
+}
 
+// Las coordenadas de la ciudad están guardadas en un mapa de 600 x 400.
+// Esta función las pasa a la posición real dentro del mapa del cliente.
+Vector2 InterfazGrafica::posicionEnMapa(Ciudad& ciudad){
+	float escalaX = mapaCliente.width / 600.0f;
+	float escalaY = mapaCliente.height / 400.0f;
 	
+	Vector2 posicion;
+	posicion.x = mapaCliente.x + ciudad.getX() * escalaX;
+	posicion.y = mapaCliente.y + ciudad.getY() * escalaY;
+	
+	return posicion;
+}
+
+
+// Dibuja una línea por cada ruta registrada en el grafo
+void InterfazGrafica::dibujarRutasMapa(){
+	Grafo* grafo = gestorAdmin.getGrafo();
+	int cantidad = grafo->obtenerCantidadCiudades();
+	
+	for(int i = 0; i < cantidad; i++){
+		for(int j = 0; j < cantidad; j++){
+			
+			if(i == j){
+				continue;
+			}
+			
+			Ciudad origen;
+			Ciudad destino;
+			grafo->obtenerCiudadPorIndice(i, origen);
+			grafo->obtenerCiudadPorIndice(j, destino);
+			
+			if(grafo->existeRuta(origen.getId(), destino.getId())){
+				Vector2 inicio = posicionEnMapa(origen);
+				Vector2 fin = posicionEnMapa(destino);
+				
+				DrawLineEx(inicio, fin, 2, LIGHTGRAY);
+			}
+		}
+	}
+}
+
+
+// Dibuja cada ciudad como un círculo con su nombre
+void InterfazGrafica::dibujarCiudadesMapa(){
+	Grafo* grafo = gestorAdmin.getGrafo();
+	int cantidad = grafo->obtenerCantidadCiudades();
+	
+	for(int i = 0; i < cantidad; i++){
+		Ciudad ciudad;
+		grafo->obtenerCiudadPorIndice(i, ciudad);
+		
+		Vector2 posicion = posicionEnMapa(ciudad);
+		
+		// color según si es origen, destino o ninguna
+		Color color = DARKBLUE;
+		
+		if(i == comboOrigen.getSeleccionada()){
+			color = GREEN;
+		}
+		else if(i == comboDestino.getSeleccionada()){
+			color = RED;
+		}
+		
+		DrawCircleV(posicion, 9, color);
+		DrawCircleLines(posicion.x, posicion.y, 9, BLACK);
+		
+		DrawText(ciudad.getNombre().c_str(), posicion.x + 12, posicion.y - 8, 18, BLACK);
+	}
+}
+
+// juntamos todo aca dibujamos el rectangulo del mapa y las lineas
+void InterfazGrafica::dibujarMapaCliente(){
+	DrawRectangleRounded(mapaCliente, 0.05, 0, WHITE);
+	DrawRectangleRoundedLines(mapaCliente, 0.05, 0, 2, DARKBLUE);
+	
+	dibujarRutasMapa();
+	dibujarCiudadesMapa();
+}
+
+
+void InterfazGrafica::dibujarBotonOpcion(Rectangle boton, const char* texto, bool seleccionado){
+	if(seleccionado){
+		DrawRectangleRec(boton, BLUE);
+		DrawText(texto, boton.x + 20, boton.y + 12, 22, WHITE);
+	}
+	else{
+		DrawRectangleRec(boton, WHITE);
+		DrawRectangleLinesEx(boton, 2, BLUE);
+		DrawText(texto, boton.x + 20, boton.y + 12, 22, BLUE);
+	}
+}
+	
+	
+// Revisa la seleccion del cliente y busca la ruta
+void InterfazGrafica::buscarRutaCliente(){
+	int origen = comboOrigen.getSeleccionada();
+	int destino = comboDestino.getSeleccionada();
+	
+	if(origen == -1 || destino == -1){
+		mensajeCliente = "Seleccione el origen y el destino.";
+		return;
+	}
+	
+	if(origen == destino){
+		mensajeCliente = "El origen y el destino deben ser distintos.";
+		return;
+	}
+	
+	
+	mensajeCliente = "";
 }
 
 void InterfazGrafica::empezar(){

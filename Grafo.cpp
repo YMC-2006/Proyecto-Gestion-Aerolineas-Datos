@@ -59,3 +59,25 @@ bool Grafo::obtenerCiudadPorIndice(int indice, Ciudad& resultado){
 	return true;
 }
 //faltan los metodos de modificar, eliminar y rutas
+
+
+bool Grafo::existeRuta(int idOrigen, int idDestino){
+	int i = buscarIndiceCiudad(idOrigen);
+	int j = buscarIndiceCiudad(idDestino);
+	
+	// si alguna de las dos ciudades no existe, no hay ruta
+	if(i == -1 || j == -1){
+		return false;
+	}
+	
+	if(costos[i][j] == -1){
+		return false;
+	}
+	
+	return true;
+}
+
+
+
+
+

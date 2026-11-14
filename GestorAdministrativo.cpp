@@ -158,3 +158,9 @@ bool GestorAdministrativo::obtenerAeronavePorIndice(int indice, Aeronave& result
 	resultado = aeronaves[indice];
 	return true;
 }
+
+
+// metodo que yuli ocupaa
+Grafo* GestorAdministrativo::getGrafo(){
+	return &grafo;
+}
