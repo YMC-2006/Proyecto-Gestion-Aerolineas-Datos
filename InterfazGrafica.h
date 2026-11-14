@@ -3,11 +3,19 @@
 #include "raylib.h"
 #include "Pantalla.h"
 #include "ListaDesplegable.h"
+#include "GestorAdministrativo.h"
 
 
 class InterfazGrafica {
 	
 private:
+	GestorAdministrativo gestor;
+	string camposCiudad[3]; // Nombre, X, Y.
+	string camposAeronave[4]; // Placa, capacidad, marca, modelo.
+	int campoCiudadActivo = -1;
+	int campoAeronaveActivo = -1;
+	string mensajeCiudad;
+	string mensajeAeronave;
 	
 	// fondos
 	int anchoPantalla, altoPantalla;

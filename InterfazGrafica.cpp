@@ -1,6 +1,178 @@
 #include "InterfazGrafica.h"
 using namespace std;
 
+#include <cstdlib>
+#include <cerrno>
+#include <climits>
+#include <cmath>
+
+// Un solo campo recibe el teclado. Tab cambia al siguiente.
+void editarCampos(string textos[], Rectangle cajas[], int cantidad, int& activo){
+	if(cantidad <= 0){
+		return;
+	}
+	
+	// Seleccionar el campo donde se hizo clic.
+	if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
+		activo = -1;
+		Vector2 mouse = GetMousePosition();
+		
+		for(int i = 0; i < cantidad; i++){
+			if(CheckCollisionPointRec(mouse, cajas[i])){
+				activo = i;
+			}
+		}
+	}
+	
+	// Cambiar de campo con Tab.
+	if(IsKeyPressed(KEY_TAB)){
+		activo++;
+		
+		if(activo >= cantidad){
+			activo = 0;
+		}
+	}
+	
+	// Leer los caracteres escritos.
+	int caracter = GetCharPressed();
+	
+	while(caracter > 0){
+		bool hayCampoSeleccionado;
+		bool esCaracterPermitido;
+		
+		if(activo >= 0 && activo < cantidad){
+			hayCampoSeleccionado = true;
+		}else{
+			hayCampoSeleccionado = false;
+		}
+		
+		// no acepto letras con tilde, espacios, numeros y en simbolos solo los necesarios
+		if(caracter >= 32 && caracter <= 126){
+			esCaracterPermitido = true;
+		}else{
+			esCaracterPermitido = false;
+		}
+		
+		if(hayCampoSeleccionado && esCaracterPermitido){
+			int cantidadCaracteres = textos[activo].length();
+			
+			if(cantidadCaracteres < 48){
+				char letra = (char)caracter;
+				textos[activo] = textos[activo] + letra;
+			}
+		}
+		
+		caracter = GetCharPressed();
+	}
+	
+	// Borrar el ultimo caracter con retroceso
+	if(activo >= 0 && activo < cantidad){
+		if(IsKeyPressed(KEY_BACKSPACE)){
+			int largo = textos[activo].length();
+			
+			if(largo > 0){
+				textos[activo].erase(largo - 1, 1);
+			}
+		}
+	}
+	
+	// Dibujar cada campo y su texto.
+	for(int i = 0; i < cantidad; i++){
+		Rectangle campo = cajas[i];
+		string texto = textos[i];
+		
+		DrawRectangleRec(campo, WHITE);
+		
+		if(activo == i){
+			DrawRectangleLinesEx(campo, 2, ORANGE);
+		}else{
+			DrawRectangleLinesEx(campo, 2, BLUE);
+		}
+		
+		int margenHorizontal = 5;
+		int margenVertical = 2;
+		
+		int x = campo.x + margenHorizontal;
+		int y = campo.y + margenVertical;
+		int ancho = campo.width - margenHorizontal * 2;
+		int alto = campo.height - margenVertical * 2;
+		
+		// Evitar que el texto se salga del campo.
+		BeginScissorMode(x, y, ancho, alto);
+		DrawText(texto.c_str(), campo.x + 8, campo.y + 12, 20, DARKBLUE);
+		EndScissorMode();
+	}
+}
+
+ bool leerCoordenada(string texto, float& numero){
+	char* fin;
+	errno = 0;
+	//strtof convierte el texto en un numero tipo float
+	numero = strtof(texto.c_str(), &fin);
+	
+	// Si no se pudo convertir ningun caracter.
+	if(fin == texto.c_str()){
+		return false;
+	}
+	
+	// Si quedaron letras u otros caracteres sin convertir.
+	if(*fin != '\0'){
+		return false;
+	}
+	
+	// Si el numero esta fuera del rango permitido para un float.
+	if(errno == ERANGE){
+		return false;
+	}
+	
+	// Si el resultado es infinito o NaN.
+	if(!isfinite(numero)){
+		return false;
+	}
+	return true;
+}
+
+	bool leerCapacidad(string texto, int& capacidad){
+		if(texto == ""){
+			return false;
+		}
+		
+		// Comprobar que todos los caracteres sean digitos.
+		for(int i = 0; i < (int)texto.length(); i++){
+			if(texto[i] < '0' || texto[i] > '9'){
+				return false;
+			}
+		}
+		
+		// Convertir el texto a un numero entero en base 10.
+		errno = 0;
+		char* fin;
+		long numero = strtol(texto.c_str(), &fin, 10);
+		
+		// Comprobar que la conversion no excedio el rango de long.
+		if(errno == ERANGE){
+			return false;
+		}
+		
+		// Comprobar que no quedo texto sin convertir.
+		if(*fin != '\0'){
+			return false;
+		}
+		
+		// La capacidad debe ser mayor que cero.
+		if(numero <= 0){
+			return false;
+		}
+		
+		// Comprobar que el numero cabe en un int.
+		if(numero > INT_MAX){
+			return false;
+		}
+		
+		capacidad = (int)numero;
+		return true;
+	}
+	
 
 InterfazGrafica::InterfazGrafica(int ancho, int alto,const char* titulo){
 	
@@ -10,11 +182,7 @@ InterfazGrafica::InterfazGrafica(int ancho, int alto,const char* titulo){
 	InitWindow(anchoPantalla, altoPantalla, titulo);
 	InitAudioDevice();
 	cargarAssets();
-	musica.looping = true;
-	
-	btnCliente = { 700, 500, 180, 50 };
-	btnAdministrador = { 900, 500, 180, 50 };
-	
+
 	comboOrigen = ListaDesplegable(700, 150, 250, 40);
 	comboDestino = ListaDesplegable(1000, 150, 250, 40);
 	
@@ -104,59 +272,103 @@ void InterfazGrafica::mostrarPantallaAdministrador(){
 }
 
 void InterfazGrafica::mostrarPantallaAeronaves(){
-	
 	DrawTexture(fondoRegistros, 0, 0, WHITE);
-	
-	//formulario de aeronaves
 	DrawText("REGISTRAR AERONAVE", 310, 175, 30, BLUE);
-	DrawText("Placas", 270, 250, 25, BLUE);
-	DrawRectangleLines(270, 285, 240, 45, BLUE);
+	DrawText("Placa", 270, 250, 25, BLUE);
 	DrawText("Capacidad", 550, 250, 25, BLUE);
-	DrawRectangleLines(550, 285, 240, 45, BLUE);
 	DrawText("Marca", 270, 360, 25, BLUE);
-	DrawRectangleLines(270, 395, 240, 45, BLUE);
 	DrawText("Modelo", 550, 360, 25, BLUE);
-	DrawRectangleLines(550, 395, 240, 45, BLUE);
-
-	//botones
-	Rectangle btnVolver = {270, 510, 200, 50};
-	Rectangle btnRegistrar = {550, 510, 240, 50};
-	DrawRectangleLines(270, 510, 200, 50, BLUE);
+	Rectangle cajas[4] = {{270,285,240,45}, {550,285,240,45},{270,395,240,45}, {550,395,240,45}};
+	editarCampos(camposAeronave, cajas, 4, campoAeronaveActivo);
+	Rectangle volver = {270,510,200,50};
+	Rectangle registrar = {550,510,240,50};
+	DrawRectangleLinesEx(volver, 2, BLUE);
 	DrawText("VOLVER", 315, 525, 25, BLUE);
-	DrawRectangleRec(btnRegistrar, BLUE);
+	DrawRectangleRec(registrar, BLUE);
 	DrawText("REGISTRAR", 590, 525, 25, WHITE);
-
+	DrawText(mensajeAeronave.c_str(), 270, 580, 18, DARKBLUE);
+	
+	int cantidad = gestor.obtenerCantidadAeronaves();
+	string mensaje = "Aeronaves registradas: " + to_string(cantidad) + " / 50";
+	DrawText(mensaje.c_str(), 270, 610, 20, BLUE);
+	
 	if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
-		if(CheckCollisionPointRec(GetMousePosition(), btnVolver)){
-			pantallaActual = ADMINISTRATIVO;
+		if(CheckCollisionPointRec(GetMousePosition(), volver)) pantallaActual = ADMINISTRATIVO;
+		else if(CheckCollisionPointRec(GetMousePosition(), registrar)){
+			int capacidad;
+			if(!leerCapacidad(camposAeronave[1], capacidad)){
+				mensajeAeronave = "La capacidad debe ser un entero mayor que cero.";
+			}else if(gestor.registrarAeronave(camposAeronave[0], capacidad,camposAeronave[2], camposAeronave[3])){
+				mensajeAeronave = "Aeronave registrada correctamente.";
+				//limpiamos los campos despues de registrar la nave para que queden limpios por si queremos registrar otro 
+				for(int i = 0; i < 4; i++){
+					camposAeronave[i] = "";
+				}
+			}else{
+				mensajeAeronave = "Revise campos vacios, placa repetida o limite de 50.";
+			}
 		}
 	}
 }
 
 void InterfazGrafica::mostrarPantallaCiudades(){
 	DrawTexture(fondoRegistros, 0, 0, WHITE);
-	
-	//formulario de ciudad
-	DrawText("REGISTRAR CIUDAD", 330, 175, 30, BLUE);
-	DrawText("ID de la ciudad", 300, 270, 25, BLUE);
-	DrawRectangleLines(300, 305, 460, 45, BLUE);
-	DrawText("Nombre de la ciudad", 300, 380, 25, BLUE);
-	DrawRectangleLines(300, 415, 460, 45, BLUE);
-
-	Rectangle btnVolver = {270, 510, 200, 50};
-	Rectangle btnRegistrar = {550, 510, 240, 50};
-	DrawRectangleLines(270, 510, 200, 50, BLUE);
+	DrawText("REGISTRAR CIUDAD / AEROPUERTO", 270, 175, 27, BLUE);
+	DrawText("Nombre (el ID se asigna automaticamente)", 270, 245, 20, BLUE);
+	DrawText("X del mapa (0 a 600)", 270, 350, 20, BLUE);
+	DrawText("Y del mapa (0 a 400)", 550, 350, 20, BLUE);
+	Rectangle cajas[3] = {{270,285,520,45}, {270,390,240,45}, {550,390,240,45}};
+	editarCampos(camposCiudad, cajas, 3, campoCiudadActivo);
+	DrawText("Coordenadas dentro del mapa, no de toda la ventana.", 270, 460, 18, BLUE);
+	Rectangle volver = {270,510,200,50};
+	Rectangle registrar = {550,510,240,50};
+	DrawRectangleLinesEx(volver, 2, BLUE);
 	DrawText("VOLVER", 315, 525, 25, BLUE);
-	DrawRectangleRec(btnRegistrar, BLUE);
+	DrawRectangleRec(registrar, BLUE);
 	DrawText("REGISTRAR", 590, 525, 25, WHITE);
-
-
+	DrawText(mensajeCiudad.c_str(), 270, 580, 18, DARKBLUE);
+	
+	
+	int cantidad = gestor.obtenerCantidadCiudades();
+	string mensaje = "Ciudades registradas: " + to_string(cantidad) + " / 50";
+	DrawText(mensaje.c_str(), 270, 610, 20, BLUE);
+	
+	
 	if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
-		if(CheckCollisionPointRec(GetMousePosition(), btnVolver)){
+		Vector2 mouse = GetMousePosition();
+		
+		if(CheckCollisionPointRec(mouse, volver)){
 			pantallaActual = ADMINISTRATIVO;
+		}else if(CheckCollisionPointRec(mouse, registrar)){
+			float x, y;
+			
+			bool xValida = leerCoordenada(camposCiudad[1], x);
+			bool yValida = leerCoordenada(camposCiudad[2], y);
+			
+			if(xValida == false || yValida == false){
+				mensajeCiudad = "Las coordenadas deben ser numeros validos.";
+			}else if(x < 0 || x > 600){
+				mensajeCiudad = "X debe estar entre 0 y 600.";
+			}else if(y < 0 || y > 400){
+				mensajeCiudad = "Y debe estar entre 0 y 400.";
+			}else{
+				bool registrada = gestor.registrarCiudad(camposCiudad[0], x, y);
+				
+				if(registrada){
+					mensajeCiudad = "Ciudad registrada correctamente.";
+					
+					// Limpiar los campos del formulario.
+					for(int i = 0; i < 3; i++){
+						camposCiudad[i] = "";
+					}
+				}else{
+					mensajeCiudad = "Revise nombre vacio, repetido o limite de 50 ciudades.";
+				}
+			}
 		}
 	}
 }
+
 
 void InterfazGrafica::mostrarPantallaRutas(){
 	DrawTexture(fondoRegistros, 0, 0, WHITE);
@@ -255,21 +467,6 @@ void InterfazGrafica::mostrarPantallaCliente(){
 
 	
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 void InterfazGrafica::empezar(){
 	

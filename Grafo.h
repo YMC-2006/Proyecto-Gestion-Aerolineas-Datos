@@ -28,6 +28,7 @@ public:
 	bool existeCiudad(int id);
 	bool obtenerCiudad(int id, Ciudad& resultado);
 	int obtenerCantidadCiudades();
+	bool obtenerCiudadPorIndice(int indice, Ciudad& resultado);
 
 	bool agregarRuta(int idOrigen, int idDestino, double costo, int duracionMinutos);
 	bool modificarRuta(int idOrigen, int idDestino, double costo, int duracionMinutos);
