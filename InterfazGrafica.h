@@ -19,6 +19,9 @@ private:
 	int campoAeronaveActivo = -1;
 	string mensajeCiudad;
 	string mensajeAeronave;
+	string camposRuta[4]; // Nombre origen, nombre destino, costo, minutos.
+	int campoRutaActivo = -1;
+	string mensajeRuta;
 	Grafo grafo;
 	Criterio criterioBusqueda;
 	string mensajeCliente;

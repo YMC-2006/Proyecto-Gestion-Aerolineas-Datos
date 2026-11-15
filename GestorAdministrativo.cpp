@@ -46,6 +46,7 @@ GestorAdministrativo::~GestorAdministrativo(){}
 
 bool GestorAdministrativo::registrarCiudad(int id, string nombre){
 	nombre = limpiarTexto(nombre);
+	if(nombre.empty()) return false;
 	Ciudad ciudad;
 	for(int i = 0; i < grafo.obtenerCantidadCiudades(); i++){
 		grafo.obtenerCiudadPorIndice(i, ciudad); 
@@ -163,4 +164,40 @@ bool GestorAdministrativo::obtenerAeronavePorIndice(int indice, Aeronave& result
 // metodo que yuli ocupaa
 Grafo* GestorAdministrativo::getGrafo(){
 	return &grafo;
+}
+
+bool GestorAdministrativo::obtenerCiudadPorNombre(string nombre, Ciudad& resultado){
+	nombre = minusculas(limpiarTexto(nombre));
+	for(int i = 0; i < grafo.obtenerCantidadCiudades(); i++){
+		Ciudad ciudad;
+		grafo.obtenerCiudadPorIndice(i, ciudad);
+		if(minusculas(ciudad.getNombre()) == nombre){
+			resultado = ciudad;
+			return true;
+		}
+	}
+	return false;
+}
+
+bool GestorAdministrativo::modificarCiudad(int id, string nombre){
+	nombre = limpiarTexto(nombre);
+	Ciudad repetida;
+	if(obtenerCiudadPorNombre(nombre, repetida) && repetida.getId() != id) return false;
+	return grafo.modificarCiudad(id, nombre);
+}
+
+bool GestorAdministrativo::eliminarCiudad(int id){
+	return grafo.eliminarCiudad(id);
+}
+
+bool GestorAdministrativo::registrarRuta(int idOrigen, int idDestino, double costo, int duracionMinutos){
+	return grafo.agregarRuta(idOrigen, idDestino, costo, duracionMinutos);
+}
+
+bool GestorAdministrativo::modificarRuta(int idOrigen, int idDestino, double costo, int duracionMinutos){
+	return grafo.modificarRuta(idOrigen, idDestino, costo, duracionMinutos);
+}
+
+bool GestorAdministrativo::eliminarRuta(int idOrigen, int idDestino){
+	return grafo.eliminarRuta(idOrigen, idDestino);
 }

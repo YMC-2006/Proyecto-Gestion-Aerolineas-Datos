@@ -20,6 +20,7 @@ public:
 	bool registrarCiudad(string nombre, float x, float y);
 	int obtenerCantidadCiudades();
 	bool obtenerCiudadPorIndice(int indice, Ciudad& resultado);
+	bool obtenerCiudadPorNombre(string nombre, Ciudad& resultado);
 	bool registrarAeronave(string placa, int capacidad, string marca, string modelo);
 	int obtenerCantidadAeronaves();
 	bool obtenerAeronavePorIndice(int indice, Aeronave& resultado);

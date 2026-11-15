@@ -377,36 +377,81 @@ void InterfazGrafica::mostrarPantallaCiudades(){
 }
 
 
+bool leerCosto(string texto, double& costo){
+	char* fin;
+	errno = 0;
+	costo = strtod(texto.c_str(), &fin);
+	if(fin == texto.c_str() || *fin != '\0') return false;
+	if(errno == ERANGE || !isfinite(costo) || costo < 0) return false;
+	return true;
+}
+
 void InterfazGrafica::mostrarPantallaRutas(){
 	DrawTexture(fondoRegistros, 0, 0, WHITE);
-	
-	//formulario de rutas
-	DrawText("REGISTRAR RUTA", 355, 175, 30, BLUE);
-	
-	//duda, eso es por ids o por nombres normales?
-	DrawText("ciudad de origen", 270, 250, 20, BLUE);
-	DrawRectangleLines(270, 285, 240, 45, BLUE);
+	DrawText("GESTION DE RUTAS", 330, 175, 30, BLUE);
+	DrawText("Ciudad de origen", 270, 250, 20, BLUE);
 	DrawText("Ciudad de destino", 550, 250, 20, BLUE);
-	DrawRectangleLines(550, 285, 240, 45, BLUE);
 	DrawText("Costo", 270, 360, 25, BLUE);
-	DrawRectangleLines(270, 395, 240, 45, BLUE);
 	DrawText("Duracion en minutos", 550, 360, 20, BLUE);
-	DrawRectangleLines(550, 395, 240, 45, BLUE);
+	Rectangle cajas[4] = {{270,285,240,45}, {550,285,240,45}, {270,395,240,45}, {550,395,240,45}};
+	editarCampos(camposRuta, cajas, 4, campoRutaActivo);
+	DrawText("Use nombres de ciudades ya registradas. Solo se guarda la ida.", 270, 460, 16, BLUE);
 
-	Rectangle btnVolver = {270, 510, 200, 50};
-	Rectangle btnRegistrar = {550, 510, 240, 50};
-	DrawRectangleLines(270, 510, 200, 50, BLUE);
-	DrawText("VOLVER", 315, 525, 25, BLUE);
+	Rectangle btnVolver = {270,575,170,45};
+	Rectangle btnRegistrar = {270,500,160,50};
+	Rectangle btnModificar = {450,500,160,50};
+	Rectangle btnEliminar = {630,500,160,50};
+	DrawRectangleLines(270, 575, 170, 45, BLUE);
+	DrawText("VOLVER", 300, 587, 22, BLUE);
 	DrawRectangleRec(btnRegistrar, BLUE);
-	DrawText("REGISTRAR", 590, 525, 25, WHITE);
+	DrawText("REGISTRAR", 285, 517, 20, WHITE);
+	DrawRectangleRec(btnModificar, BLUE);
+	DrawText("MODIFICAR", 462, 517, 20, WHITE);
+	DrawRectangleLines(630, 500, 160, 50, BLUE);
+	DrawText("ELIMINAR", 650, 517, 20, BLUE);
+	DrawText(mensajeRuta.c_str(), 270, 640, 16, DARKBLUE);
 
 	if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
-		if(CheckCollisionPointRec(GetMousePosition(), btnVolver)){
+		Vector2 mouse = GetMousePosition();
+		if(CheckCollisionPointRec(mouse, btnVolver)){
 			pantallaActual = ADMINISTRATIVO;
+		}else if(CheckCollisionPointRec(mouse, btnRegistrar) ||
+		         CheckCollisionPointRec(mouse, btnModificar) ||
+		         CheckCollisionPointRec(mouse, btnEliminar)){
+			Ciudad origen, destino;
+			double costo;
+			int minutos;
+			if(!gestorAdmin.obtenerCiudadPorNombre(camposRuta[0], origen) ||
+			   !gestorAdmin.obtenerCiudadPorNombre(camposRuta[1], destino)){
+				mensajeRuta = "Las dos ciudades deben estar registradas.";
+			}else if(origen.getId() == destino.getId()){
+				mensajeRuta = "El origen y el destino deben ser diferentes.";
+			}else if(CheckCollisionPointRec(mouse, btnEliminar)){
+				// Para eliminar solo se necesitan las dos ciudades.
+				if(gestorAdmin.eliminarRuta(origen.getId(), destino.getId())){
+					mensajeRuta = "Ruta eliminada. El regreso no se modifica.";
+				}else{
+					mensajeRuta = "No existe esa ruta de ida.";
+				}
+			}else if(!leerCosto(camposRuta[2], costo)){
+				mensajeRuta = "Costo invalido. Use punto decimal y un valor no negativo.";
+			}else if(!leerCapacidad(camposRuta[3], minutos)){
+				mensajeRuta = "La duracion debe ser un entero mayor que cero.";
+			}else if(CheckCollisionPointRec(mouse, btnModificar)){
+				if(gestorAdmin.modificarRuta(origen.getId(), destino.getId(), costo, minutos)){
+					mensajeRuta = "Ruta modificada correctamente.";
+				}else{
+					mensajeRuta = "No existe esa ruta. Primero debe registrarla.";
+				}
+			}else if(gestorAdmin.registrarRuta(origen.getId(), destino.getId(), costo, minutos)){
+				mensajeRuta = "Ruta registrada correctamente.";
+				for(int i = 0; i < 4; i++) camposRuta[i] = "";
+			}else{
+				mensajeRuta = "Ya existe una ruta desde ese origen hacia ese destino.";
+			}
 		}
 	}
 }
-
 
 // ============================= CLIENTE YULI :P ====================================
 // Llena las listas de origen y destino.
@@ -493,8 +538,8 @@ void InterfazGrafica::mostrarPantallaCliente(){
 	comboOrigen.dibujar();
 }
 
-// Las coordenadas de la ciudad están guardadas en un mapa de 600 x 400.
-// Esta función las pasa a la posición real dentro del mapa del cliente.
+// Las coordenadas de la ciudad estï¿½n guardadas en un mapa de 600 x 400.
+// Esta funciï¿½n las pasa a la posiciï¿½n real dentro del mapa del cliente.
 Vector2 InterfazGrafica::posicionEnMapa(Ciudad& ciudad){
 	float escalaX = mapaCliente.width / 600.0f;
 	float escalaY = mapaCliente.height / 400.0f;
@@ -507,7 +552,7 @@ Vector2 InterfazGrafica::posicionEnMapa(Ciudad& ciudad){
 }
 
 
-// Dibuja una línea por cada ruta registrada en el grafo
+// Dibuja una lï¿½nea por cada ruta registrada en el grafo
 void InterfazGrafica::dibujarRutasMapa(){
 	Grafo* grafo = gestorAdmin.getGrafo();
 	int cantidad = grafo->obtenerCantidadCiudades();
@@ -535,7 +580,7 @@ void InterfazGrafica::dibujarRutasMapa(){
 }
 
 
-// Dibuja cada ciudad como un círculo con su nombre
+// Dibuja cada ciudad como un cï¿½rculo con su nombre
 void InterfazGrafica::dibujarCiudadesMapa(){
 	Grafo* grafo = gestorAdmin.getGrafo();
 	int cantidad = grafo->obtenerCantidadCiudades();
@@ -546,7 +591,7 @@ void InterfazGrafica::dibujarCiudadesMapa(){
 		
 		Vector2 posicion = posicionEnMapa(ciudad);
 		
-		// color según si es origen, destino o ninguna
+		// color segï¿½n si es origen, destino o ninguna
 		Color color = DARKBLUE;
 		
 		if(i == comboOrigen.getSeleccionada()){
