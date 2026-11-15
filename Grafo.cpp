@@ -26,7 +26,7 @@ bool Grafo::existeCiudad(int id){
 
 bool Grafo::agregarCiudad(Ciudad& ciudad){
 	if(cantidadCiudades == N || ciudad.getId() < 0 ||
-	   ciudad.getNombre().empty() || existeCiudad(ciudad.getId())){
+		ciudad.getNombre().empty() || existeCiudad(ciudad.getId())){
 		return false;
 	}
 	for(int i = 0; i < cantidadCiudades; i++){
@@ -65,16 +65,16 @@ bool Grafo::obtenerCiudadPorIndice(int indice, Ciudad& resultado){
 bool Grafo::existeRuta(int idOrigen, int idDestino){
 	int i = buscarIndiceCiudad(idOrigen);
 	int j = buscarIndiceCiudad(idDestino);
-	
+
 	// si alguna de las dos ciudades no existe, no hay ruta
 	if(i == -1 || j == -1){
 		return false;
 	}
-	
+
 	if(costos[i][j] == -1){
 		return false;
 	}
-	
+
 	return true;
 }
 
@@ -166,7 +166,7 @@ double Grafo::obtenerPeso(int indiceOrigen, int indiceDestino, Criterio criterio
 	if(indiceDestino < 0 || indiceDestino >= cantidadCiudades){
 		return -1;
 	}
-	
+
 	if(criterio == POR_COSTO){
 		return costos[indiceOrigen][indiceDestino];
 	}

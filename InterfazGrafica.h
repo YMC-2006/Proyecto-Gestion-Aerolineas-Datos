@@ -29,6 +29,14 @@ private:
 	string camposTripulante[4]; // Identificacion, nombre, cargo y placa.
 	int campoTripulanteActivo = -1;
 	string mensajeTripulante;
+	string campoBuscarCiudad[1];
+	int campoBuscarCiudadActivo = -1;
+	string mensajeArbol;
+	int ciudadEncontrada = -1;
+	int recorridoArbol = 0;
+	int paginaArbol = 0;
+	int moverArbolX = 0;
+	int moverArbolY = 0;
 	Grafo grafo;
 	Criterio criterioBusqueda;
 	string mensajeCliente;
@@ -73,6 +81,9 @@ private:
 	void mostrarPantallaRutas();
 	void mostrarPantallaVuelos();
 	void mostrarPantallaTripulacion();
+	void mostrarPantallaArbolCiudades();
+	void ubicarNodosCiudad(ArbolCiudades* arbol, int indice, int nivel, int& posicion, int x[], int y[]);
+	void dibujarNodosCiudad(ArbolCiudades* arbol, int indice, int x[], int y[]);
 	
 	
 	// funciones de la vista del CLIENTE
