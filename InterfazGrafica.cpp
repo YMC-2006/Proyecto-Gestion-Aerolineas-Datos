@@ -250,22 +250,25 @@ void InterfazGrafica::mostrarPantallaAdministrador(){
 
 	DrawText("ADMINISTRACION", 365, 176, 40, BLUE);
 
-	Rectangle btnAeronaves = {380, 240, 300, 60};
-	Rectangle btnCiudades = {380, 320, 300, 60};
-	Rectangle btnRutas = {380, 400, 300, 60};
-	Rectangle btnVuelos = {380, 480, 300, 60};
-	Rectangle btnVolver = {430, 570, 200, 50};
+	Rectangle btnAeronaves = {380, 235, 300, 50};
+	Rectangle btnCiudades = {380, 305, 300, 50};
+	Rectangle btnRutas = {380, 375, 300, 50};
+	Rectangle btnVuelos = {380, 445, 300, 50};
+	Rectangle btnVolver = {430, 590, 200, 45};
 	DrawRectangleRec(btnAeronaves, BLUE);
 	DrawRectangleRec(btnCiudades, BLUE);
 	DrawRectangleRec(btnRutas, BLUE);
 	DrawRectangleRec(btnVuelos, BLUE);
-	DrawRectangleLines(430, 570, 200, 50, BLUE);
+	Rectangle btnTripulacion = {380, 515, 300, 50};
+	DrawRectangleRec(btnTripulacion, BLUE);
+	DrawText("TRIPULACION", 420, 525, 30, WHITE);
+	DrawRectangleLines(430, 590, 200, 45, BLUE);
 	
-	DrawText("AERONAVES", 434, 255, 30, WHITE);
-	DrawText("CIUDADES", 445, 335, 30, WHITE);
-	DrawText("RUTAS", 479, 415, 30, WHITE);
-	DrawText("VUELOS", 465, 495, 30, WHITE);
-	DrawText("VOLVER", 475, 585, 25, BLUE);
+	DrawText("AERONAVES", 434, 245, 30, WHITE);
+	DrawText("CIUDADES", 445, 315, 30, WHITE);
+	DrawText("RUTAS", 479, 385, 30, WHITE);
+	DrawText("VUELOS", 465, 455, 30, WHITE);
+	DrawText("VOLVER", 475, 600, 25, BLUE);
 
 	if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
 		
@@ -279,6 +282,8 @@ void InterfazGrafica::mostrarPantallaAdministrador(){
 			pantallaActual = RUTAS;
 		}else if(CheckCollisionPointRec(mouse, btnVuelos)){
 			pantallaActual = VUELOS;
+		}else if(CheckCollisionPointRec(mouse, btnTripulacion)){
+			pantallaActual = TRIPULACION;
 		}else if(CheckCollisionPointRec(mouse, btnVolver)){
 			pantallaActual = PRINCIPAL;
 		}
@@ -510,6 +515,44 @@ void InterfazGrafica::mostrarPantallaVuelos(){
 // ============================= CLIENTE YULI :P ====================================
 // Llena las listas de origen y destino.
 // Se llama una vez, al entrar a la pantalla del cliente.
+
+void InterfazGrafica::mostrarPantallaTripulacion(){
+	DrawTexture(fondoRegistros, 0, 0, WHITE);
+	DrawText("REGISTRAR TRIPULANTE", 295, 175, 30, BLUE);
+	DrawText("Identificacion", 270, 250, 22, BLUE);
+	DrawText("Nombre", 550, 250, 22, BLUE);
+	DrawText("Cargo", 270, 360, 22, BLUE);
+	DrawText("Placa de aeronave", 550, 360, 22, BLUE);
+	Rectangle cajas[4] = {{270,285,240,45}, {550,285,240,45}, {270,395,240,45}, {550,395,240,45}};
+	editarCampos(camposTripulante, cajas, 4, campoTripulanteActivo);
+	DrawText("Cargo: por ejemplo piloto, copiloto o auxiliar.", 270, 455, 18, BLUE);
+	DrawText("La aeronave debe estar registrada.", 270, 480, 18, BLUE);
+	Rectangle volver = {270,520,200,50};
+	Rectangle registrar = {550,520,240,50};
+	DrawRectangleLines(270, 520, 200, 50, BLUE);
+	DrawText("VOLVER", 315, 535, 25, BLUE);
+	DrawRectangleRec(registrar, BLUE);
+	DrawText("REGISTRAR", 590, 535, 25, WHITE);
+	DrawText(mensajeTripulante.c_str(), 270, 590, 16, DARKBLUE);
+	string cantidad = "Tripulantes registrados: " + to_string(gestorAdmin.obtenerCantidadTripulantes()) + " / 50";
+	DrawText(cantidad.c_str(), 270, 620, 20, BLUE);
+	if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
+		Vector2 mouse = GetMousePosition();
+		if(CheckCollisionPointRec(mouse, volver)){
+			pantallaActual = ADMINISTRATIVO;
+		}else if(CheckCollisionPointRec(mouse, registrar)){
+			Tripulante existente;
+			if(gestorAdmin.obtenerTripulantePorIdentificacion(camposTripulante[0], existente)){
+				mensajeTripulante = "Ya existe un tripulante con esa identificacion.";
+			}else if(gestorAdmin.registrarTripulante(camposTripulante[0], camposTripulante[1], camposTripulante[2], camposTripulante[3])){
+				mensajeTripulante = "Tripulante registrado y asignado a la aeronave.";
+				for(int i = 0; i < 4; i++) camposTripulante[i] = "";
+			}else{
+				mensajeTripulante = "Revise campos vacios, placa existente o limite de 50.";
+			}
+		}
+	}
+}
 
 void InterfazGrafica::cargarCombosCliente(){
 	resultadoRuta.existe = false;
@@ -835,6 +878,8 @@ void InterfazGrafica::empezar(){
 			mostrarPantallaRutas();
 		}else if(pantallaActual == VUELOS){
 			mostrarPantallaVuelos();
+		}else if(pantallaActual == TRIPULACION){
+			mostrarPantallaTripulacion();
 		}else if(pantallaActual == CLIENTE){
 			mostrarPantallaCliente();
 		}

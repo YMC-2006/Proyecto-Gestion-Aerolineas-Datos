@@ -26,6 +26,9 @@ private:
 	string camposVuelo[4]; // Codigo, placa, nombre origen y nombre destino.
 	int campoVueloActivo = -1;
 	string mensajeVuelo;
+	string camposTripulante[4]; // Identificacion, nombre, cargo y placa.
+	int campoTripulanteActivo = -1;
+	string mensajeTripulante;
 	Grafo grafo;
 	Criterio criterioBusqueda;
 	string mensajeCliente;
@@ -69,6 +72,7 @@ private:
 	void mostrarPantallaCiudades();
 	void mostrarPantallaRutas();
 	void mostrarPantallaVuelos();
+	void mostrarPantallaTripulacion();
 	
 	
 	// funciones de la vista del CLIENTE

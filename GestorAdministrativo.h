@@ -4,6 +4,7 @@
 #include "Grafo.h"
 #include "Aeronave.h"
 #include "Vuelo.h"
+#include "Tripulante.h"
 using namespace std;
 
 class GestorAdministrativo {
@@ -14,6 +15,8 @@ private:
 	int siguienteIdCiudad;
 	Vuelo vuelos[50];
 	int cantidadVuelos;
+	Tripulante tripulantes[50];
+	int cantidadTripulantes;
 
 public:
 	GestorAdministrativo();
@@ -40,6 +43,10 @@ public:
 	int obtenerCantidadVuelos();
 	bool obtenerVueloPorIndice(int indice, Vuelo& resultado);
 	bool obtenerVueloPorCodigo(string codigo, Vuelo& resultado);
+	bool registrarTripulante(string identificacion, string nombre, string cargo, string placa);
+	int obtenerCantidadTripulantes();
+	bool obtenerTripulantePorIndice(int indice, Tripulante& resultado);
+	bool obtenerTripulantePorIdentificacion(string identificacion, Tripulante& resultado);
 };
 
 #endif

@@ -40,6 +40,7 @@ string minusculas(string texto){
 GestorAdministrativo::GestorAdministrativo(){
 	cantidadAeronaves = 0;
 	cantidadVuelos = 0;
+	cantidadTripulantes = 0;
 	siguienteIdCiudad = 1;
 }
 
@@ -234,6 +235,52 @@ bool GestorAdministrativo::registrarVuelo(string codigo, string placa, int idOri
 
 int GestorAdministrativo::obtenerCantidadVuelos(){
 	return cantidadVuelos;
+}
+
+bool GestorAdministrativo::registrarTripulante(string identificacion, string nombre, string cargo, string placa){
+	identificacion = minusculas(limpiarTexto(identificacion));
+	nombre = limpiarTexto(nombre);
+	cargo = limpiarTexto(cargo);
+	placa = minusculas(limpiarTexto(placa));
+	if(cantidadTripulantes >= 50) return false;
+	if(identificacion.empty() || nombre.empty() || cargo.empty()) return false;
+	for(int i = 0; i < cantidadTripulantes; i++){
+		if(tripulantes[i].identificacion == identificacion) return false;
+	}
+	bool existeAeronave = false;
+	for(int i = 0; i < cantidadAeronaves; i++){
+		if(aeronaves[i].placa == placa) existeAeronave = true;
+	}
+	if(!existeAeronave) return false;
+	Tripulante nuevo;
+	nuevo.identificacion = identificacion;
+	nuevo.nombre = nombre;
+	nuevo.cargo = cargo;
+	nuevo.placaAeronave = placa;
+	tripulantes[cantidadTripulantes] = nuevo;
+	cantidadTripulantes++;
+	return true;
+}
+
+int GestorAdministrativo::obtenerCantidadTripulantes(){
+	return cantidadTripulantes;
+}
+
+bool GestorAdministrativo::obtenerTripulantePorIndice(int indice, Tripulante& resultado){
+	if(indice < 0 || indice >= cantidadTripulantes) return false;
+	resultado = tripulantes[indice];
+	return true;
+}
+
+bool GestorAdministrativo::obtenerTripulantePorIdentificacion(string identificacion, Tripulante& resultado){
+	identificacion = minusculas(limpiarTexto(identificacion));
+	for(int i = 0; i < cantidadTripulantes; i++){
+		if(tripulantes[i].identificacion == identificacion){
+			resultado = tripulantes[i];
+			return true;
+		}
+	}
+	return false;
 }
 
 bool GestorAdministrativo::obtenerVueloPorIndice(int indice, Vuelo& resultado){
