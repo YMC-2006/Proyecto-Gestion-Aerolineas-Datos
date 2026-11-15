@@ -157,6 +157,24 @@ int Grafo::obtenerDuracion(int idOrigen, int idDestino){
 	return duraciones[buscarIndiceCiudad(idOrigen)][buscarIndiceCiudad(idDestino)];
 }
 
+// Devuelve el costo o la duracion de la ruta directa entre dos indices.
+// Devuelve -1 si no hay ruta.
+double Grafo::obtenerPeso(int indiceOrigen, int indiceDestino, Criterio criterio){
+	if(indiceOrigen < 0 || indiceOrigen >= cantidadCiudades){
+		return -1;
+	}
+	if(indiceDestino < 0 || indiceDestino >= cantidadCiudades){
+		return -1;
+	}
+	
+	if(criterio == POR_COSTO){
+		return costos[indiceOrigen][indiceDestino];
+	}
+	else{
+		return duraciones[indiceOrigen][indiceDestino];
+	}
+}
+
 
 
 

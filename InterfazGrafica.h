@@ -6,13 +6,14 @@
 #include "GestorAdministrativo.h"
 #include "Grafo.h"
 #include "Criterio.h"
-
+#include "GestorCliente.h"
+#include "ResultadoRuta.h"
 
 class InterfazGrafica {
 	
 private:
 	GestorAdministrativo gestorAdmin;
-	GestorAdministrativo gestorCliente;
+	GestorCliente gestorCliente;
 	string camposCiudad[3]; // Nombre, X, Y.
 	string camposAeronave[4]; // Placa, capacidad, marca, modelo.
 	int campoCiudadActivo = -1;
@@ -28,7 +29,7 @@ private:
 	Grafo grafo;
 	Criterio criterioBusqueda;
 	string mensajeCliente;
-	
+	ResultadoRuta resultadoRuta;
 	
 	
 	
@@ -78,6 +79,9 @@ private:
 	Vector2 posicionEnMapa(Ciudad& ciudad);
 	void dibujarBotonOpcion(Rectangle boton, const char* texto, bool seleccionado);
 	void buscarRutaCliente();
+	
+	void dibujarRutaResultado();
+	void dibujarPanelResultado();
 	
 public:
 	InterfazGrafica(int ancho, int alto,const char* titulo);

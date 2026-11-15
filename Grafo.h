@@ -3,6 +3,8 @@
 
 #include "Ciudad.h"
 #include "Arista.h"
+#include "Criterio.h"
+
 
 using namespace std;
 class Grafo {
@@ -36,6 +38,9 @@ public:
 	bool existeRuta(int idOrigen, int idDestino);
 	double obtenerCosto(int idOrigen, int idDestino);
 	int obtenerDuracion(int idOrigen, int idDestino);
+	
+	// yuu, para el algoritmo de dijkstra y calcular rutas ocupo este metodo en el grafo
+	double obtenerPeso(int idOrigen, int idDestino, Criterio criterio);
 };
 
 #endif

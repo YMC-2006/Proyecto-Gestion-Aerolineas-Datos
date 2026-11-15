@@ -24,6 +24,8 @@ InterfazGrafica::InterfazGrafica(int ancho, int alto,const char* titulo){
 	criterioBusqueda = POR_COSTO;
 	mensajeCliente = "";
 	
+	gestorCliente.setGrafo(gestorAdmin.getGrafo());
+	resultadoRuta.existe = false;
 }
 
 InterfazGrafica::~InterfazGrafica(){
@@ -458,9 +460,6 @@ void InterfazGrafica::mostrarPantallaRutas(){
 	}
 }
 
-// ============================= CLIENTE YULI :P ====================================
-// Llena las listas de origen y destino.
-// Se llama una vez, al entrar a la pantalla del cliente.
 
 void InterfazGrafica::mostrarPantallaVuelos(){
 	DrawTexture(fondoRegistros, 0, 0, WHITE);
@@ -481,7 +480,7 @@ void InterfazGrafica::mostrarPantallaVuelos(){
 	DrawText(mensajeVuelo.c_str(), 270, 580, 16, DARKBLUE);
 	string cantidad = "Vuelos registrados: " + to_string(gestorAdmin.obtenerCantidadVuelos()) + " / 50";
 	DrawText(cantidad.c_str(), 270, 610, 20, BLUE);
-
+	
 	if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
 		Vector2 mouse = GetMousePosition();
 		if(CheckCollisionPointRec(mouse, volver)){
@@ -492,18 +491,30 @@ void InterfazGrafica::mostrarPantallaVuelos(){
 			   !gestorAdmin.obtenerCiudadPorNombre(camposVuelo[3], destino)){
 				mensajeVuelo = "Las dos ciudades deben estar registradas.";
 			}else if(!gestorAdmin.getGrafo()->existeRuta(origen.getId(), destino.getId())){
-				mensajeVuelo = "Primero registre una ruta en esa direccion.";
-			}else if(gestorAdmin.registrarVuelo(camposVuelo[0], camposVuelo[1], origen.getId(), destino.getId())){
+				   mensajeVuelo = "Primero registre una ruta en esa direccion.";
+			   }else if(gestorAdmin.registrarVuelo(camposVuelo[0], camposVuelo[1], origen.getId(), destino.getId())){
 				mensajeVuelo = "Vuelo registrado correctamente.";
 				for(int i = 0; i < 4; i++) camposVuelo[i] = "";
 			}else{
-				mensajeVuelo = "Revise codigo vacio/repetido, placa o limite de 50.";
-			}
+				   mensajeVuelo = "Revise codigo vacio/repetido, placa o limite de 50.";
+			   }
 		}
 	}
 }
 
+
+
+
+
+
+// ============================= CLIENTE YULI :P ====================================
+// Llena las listas de origen y destino.
+// Se llama una vez, al entrar a la pantalla del cliente.
+
 void InterfazGrafica::cargarCombosCliente(){
+	resultadoRuta.existe = false;
+	mensajeCliente = ""	;
+	
 	comboOrigen.limpiar();
 	comboDestino.limpiar();
 	
@@ -538,6 +549,19 @@ void InterfazGrafica::mostrarPantallaCliente(){
 	DrawText("DESDE", 700, 120, 20, BLACK);
 	DrawText("HASTA", 1000, 120, 20, BLACK);
 	
+	
+	// si cambio la seleccion, el resultado anterior ya no sirve
+	if(resultadoRuta.existe){
+		int primera = resultadoRuta.camino[0];
+		int ultima = resultadoRuta.camino[resultadoRuta.largo - 1];
+		
+		if(primera != comboOrigen.getSeleccionada() || ultima != comboDestino.getSeleccionada()){
+			resultadoRuta.existe = false;
+		}
+	}
+	
+	
+	
 	Rectangle btnCosto = {700, 330, 250, 45};
 	Rectangle btnTiempo = {1000, 330, 250, 45};
 	Rectangle btnBuscar = {800, 410, 350, 55};
@@ -569,9 +593,11 @@ void InterfazGrafica::mostrarPantallaCliente(){
 		}
 		else if(CheckCollisionPointRec(mouse, btnCosto)){
 			criterioBusqueda = POR_COSTO;
+			resultadoRuta.existe = false;
 		}
 		else if(CheckCollisionPointRec(mouse, btnTiempo)){
 			criterioBusqueda = POR_TIEMPO;
+			resultadoRuta.existe = false;
 		}
 		else if(CheckCollisionPointRec(mouse, btnBuscar)){
 			buscarRutaCliente();
@@ -584,8 +610,8 @@ void InterfazGrafica::mostrarPantallaCliente(){
 	comboOrigen.dibujar();
 }
 
-// Las coordenadas de la ciudad est�n guardadas en un mapa de 600 x 400.
-// Esta funci�n las pasa a la posici�n real dentro del mapa del cliente.
+// Las coordenadas de la ciudad estan guardadas en un mapa de 600 x 400.
+// Esta funcion las pasa a la posicion real dentro del mapa del cliente.
 Vector2 InterfazGrafica::posicionEnMapa(Ciudad& ciudad){
 	float escalaX = mapaCliente.width / 600.0f;
 	float escalaY = mapaCliente.height / 400.0f;
@@ -598,7 +624,7 @@ Vector2 InterfazGrafica::posicionEnMapa(Ciudad& ciudad){
 }
 
 
-// Dibuja una l�nea por cada ruta registrada en el grafo
+// Dibuja una linea por cada ruta registrada en el grafo
 void InterfazGrafica::dibujarRutasMapa(){
 	Grafo* grafo = gestorAdmin.getGrafo();
 	int cantidad = grafo->obtenerCantidadCiudades();
@@ -626,7 +652,7 @@ void InterfazGrafica::dibujarRutasMapa(){
 }
 
 
-// Dibuja cada ciudad como un c�rculo con su nombre
+// Dibuja cada ciudad como un circulo con su nombre
 void InterfazGrafica::dibujarCiudadesMapa(){
 	Grafo* grafo = gestorAdmin.getGrafo();
 	int cantidad = grafo->obtenerCantidadCiudades();
@@ -637,7 +663,7 @@ void InterfazGrafica::dibujarCiudadesMapa(){
 		
 		Vector2 posicion = posicionEnMapa(ciudad);
 		
-		// color seg�n si es origen, destino o ninguna
+		// color segun si es origen, destino o ninguna
 		Color color = DARKBLUE;
 		
 		if(i == comboOrigen.getSeleccionada()){
@@ -660,6 +686,8 @@ void InterfazGrafica::dibujarMapaCliente(){
 	DrawRectangleRoundedLines(mapaCliente, 0.05, 0, 2, DARKBLUE);
 	
 	dibujarRutasMapa();
+	//:0 
+	dibujarRutaResultado();
 	dibujarCiudadesMapa();
 }
 
@@ -682,6 +710,8 @@ void InterfazGrafica::buscarRutaCliente(){
 	int origen = comboOrigen.getSeleccionada();
 	int destino = comboDestino.getSeleccionada();
 	
+	resultadoRuta.existe = false;
+	
 	if(origen == -1 || destino == -1){
 		mensajeCliente = "Seleccione el origen y el destino.";
 		return;
@@ -692,9 +722,96 @@ void InterfazGrafica::buscarRutaCliente(){
 		return;
 	}
 	
+	bool encontrada = gestorCliente.buscarMejorRuta(origen, destino, criterioBusqueda, resultadoRuta);
 	
-	mensajeCliente = "";
+	if(encontrada){
+		mensajeCliente = "";
+	}
+	else{
+		mensajeCliente = "No hay ninguna ruta disponible entre esas ciudades.";
+	}
 }
+
+
+
+// Dibuja encima, mas gruesos, los tramos de la ruta encontrada
+void InterfazGrafica::dibujarRutaResultado(){
+	if(!resultadoRuta.existe){
+		return;
+	}
+	
+	Grafo* grafo = gestorAdmin.getGrafo();
+	
+	for(int k = 0; k < resultadoRuta.largo - 1; k++){
+		Ciudad desde;
+		Ciudad hasta;
+		grafo->obtenerCiudadPorIndice(resultadoRuta.camino[k], desde);
+		grafo->obtenerCiudadPorIndice(resultadoRuta.camino[k + 1], hasta);
+		
+		Vector2 inicio = posicionEnMapa(desde);
+		Vector2 fin = posicionEnMapa(hasta);
+		
+		DrawLineEx(inicio, fin, 5, ORANGE);
+	}
+}
+
+
+
+
+// Muestra el recorrido, las escalas y los totales
+void InterfazGrafica::dibujarPanelResultado(){
+	if(!resultadoRuta.existe){
+		return;
+	}
+	
+	Grafo* grafo = gestorAdmin.getGrafo();
+	int y = 490;
+	
+	if(criterioBusqueda == POR_COSTO){
+		DrawText("Ruta mas barata:", 700, y, 24, DARKBLUE);
+	}
+	else{
+		DrawText("Ruta mas rapida:", 700, y, 24, DARKBLUE);
+	}
+	y += 35;
+	
+	// cada ciudad del recorrido
+	for(int k = 0; k < resultadoRuta.largo; k++){
+		Ciudad ciudad;
+		grafo->obtenerCiudadPorIndice(resultadoRuta.camino[k], ciudad);
+		
+		string linea = to_string(k + 1) + ". " + ciudad.getNombre();
+		DrawText(linea.c_str(), 720, y, 20, BLACK);
+		y += 25;
+	}
+	
+	y += 10;
+	
+	int escalas = resultadoRuta.largo - 2;
+	DrawText(TextFormat("Escalas: %d", escalas), 700, y, 22, BLACK);
+	y += 30;
+	
+	DrawText(TextFormat("Costo total: $%.2f", resultadoRuta.costoTotal), 700, y, 22, BLACK);
+	y += 30;
+	
+	DrawText(TextFormat("Tiempo total: %d min", resultadoRuta.duracionTotal), 700, y, 22, BLACK);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 void InterfazGrafica::empezar(){
 	
