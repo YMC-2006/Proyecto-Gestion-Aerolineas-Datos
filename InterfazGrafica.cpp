@@ -248,19 +248,22 @@ void InterfazGrafica::mostrarPantallaAdministrador(){
 
 	DrawText("ADMINISTRACION", 365, 176, 40, BLUE);
 
-	Rectangle btnAeronaves = {380, 260, 300, 60};
-	Rectangle btnCiudades = {380, 350, 300, 60};
-	Rectangle btnRutas = {380, 440, 300, 60};
-	Rectangle btnVolver = {430, 540, 200, 50};
+	Rectangle btnAeronaves = {380, 240, 300, 60};
+	Rectangle btnCiudades = {380, 320, 300, 60};
+	Rectangle btnRutas = {380, 400, 300, 60};
+	Rectangle btnVuelos = {380, 480, 300, 60};
+	Rectangle btnVolver = {430, 570, 200, 50};
 	DrawRectangleRec(btnAeronaves, BLUE);
 	DrawRectangleRec(btnCiudades, BLUE);
 	DrawRectangleRec(btnRutas, BLUE);
-	DrawRectangleLines(430, 540, 200, 50, BLUE);
+	DrawRectangleRec(btnVuelos, BLUE);
+	DrawRectangleLines(430, 570, 200, 50, BLUE);
 	
-	DrawText("AERONAVES", 434, 275, 30, WHITE);
-	DrawText("CIUDADES", 445, 365, 30, WHITE);
-	DrawText("RUTAS", 479, 455, 30, WHITE);
-	DrawText("VOLVER", 475, 555, 25, BLUE);
+	DrawText("AERONAVES", 434, 255, 30, WHITE);
+	DrawText("CIUDADES", 445, 335, 30, WHITE);
+	DrawText("RUTAS", 479, 415, 30, WHITE);
+	DrawText("VUELOS", 465, 495, 30, WHITE);
+	DrawText("VOLVER", 475, 585, 25, BLUE);
 
 	if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
 		
@@ -272,6 +275,8 @@ void InterfazGrafica::mostrarPantallaAdministrador(){
 			pantallaActual = CIUDADES;
 		}else if(CheckCollisionPointRec(mouse, btnRutas)){
 			pantallaActual = RUTAS;
+		}else if(CheckCollisionPointRec(mouse, btnVuelos)){
+			pantallaActual = VUELOS;
 		}else if(CheckCollisionPointRec(mouse, btnVolver)){
 			pantallaActual = PRINCIPAL;
 		}
@@ -431,7 +436,7 @@ void InterfazGrafica::mostrarPantallaRutas(){
 				if(gestorAdmin.eliminarRuta(origen.getId(), destino.getId())){
 					mensajeRuta = "Ruta eliminada. El regreso no se modifica.";
 				}else{
-					mensajeRuta = "No existe esa ruta de ida.";
+					mensajeRuta = "Ruta inexistente o asignada a un vuelo.";
 				}
 			}else if(!leerCosto(camposRuta[2], costo)){
 				mensajeRuta = "Costo invalido. Use punto decimal y un valor no negativo.";
@@ -456,6 +461,47 @@ void InterfazGrafica::mostrarPantallaRutas(){
 // ============================= CLIENTE YULI :P ====================================
 // Llena las listas de origen y destino.
 // Se llama una vez, al entrar a la pantalla del cliente.
+
+void InterfazGrafica::mostrarPantallaVuelos(){
+	DrawTexture(fondoRegistros, 0, 0, WHITE);
+	DrawText("REGISTRAR VUELO", 340, 175, 30, BLUE);
+	DrawText("Codigo del vuelo", 270, 250, 22, BLUE);
+	DrawText("Placa de aeronave", 550, 250, 22, BLUE);
+	DrawText("Ciudad de origen", 270, 360, 22, BLUE);
+	DrawText("Ciudad de destino", 550, 360, 22, BLUE);
+	Rectangle cajas[4] = {{270,285,240,45}, {550,285,240,45}, {270,395,240,45}, {550,395,240,45}};
+	editarCampos(camposVuelo, cajas, 4, campoVueloActivo);
+	DrawText("Primero registre la aeronave y la ruta de ida.", 270, 460, 18, BLUE);
+	Rectangle volver = {270,510,200,50};
+	Rectangle registrar = {550,510,240,50};
+	DrawRectangleLines(270, 510, 200, 50, BLUE);
+	DrawText("VOLVER", 315, 525, 25, BLUE);
+	DrawRectangleRec(registrar, BLUE);
+	DrawText("REGISTRAR", 590, 525, 25, WHITE);
+	DrawText(mensajeVuelo.c_str(), 270, 580, 16, DARKBLUE);
+	string cantidad = "Vuelos registrados: " + to_string(gestorAdmin.obtenerCantidadVuelos()) + " / 50";
+	DrawText(cantidad.c_str(), 270, 610, 20, BLUE);
+
+	if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
+		Vector2 mouse = GetMousePosition();
+		if(CheckCollisionPointRec(mouse, volver)){
+			pantallaActual = ADMINISTRATIVO;
+		}else if(CheckCollisionPointRec(mouse, registrar)){
+			Ciudad origen, destino;
+			if(!gestorAdmin.obtenerCiudadPorNombre(camposVuelo[2], origen) ||
+			   !gestorAdmin.obtenerCiudadPorNombre(camposVuelo[3], destino)){
+				mensajeVuelo = "Las dos ciudades deben estar registradas.";
+			}else if(!gestorAdmin.getGrafo()->existeRuta(origen.getId(), destino.getId())){
+				mensajeVuelo = "Primero registre una ruta en esa direccion.";
+			}else if(gestorAdmin.registrarVuelo(camposVuelo[0], camposVuelo[1], origen.getId(), destino.getId())){
+				mensajeVuelo = "Vuelo registrado correctamente.";
+				for(int i = 0; i < 4; i++) camposVuelo[i] = "";
+			}else{
+				mensajeVuelo = "Revise codigo vacio/repetido, placa o limite de 50.";
+			}
+		}
+	}
+}
 
 void InterfazGrafica::cargarCombosCliente(){
 	comboOrigen.limpiar();
@@ -670,6 +716,8 @@ void InterfazGrafica::empezar(){
 		}
 		else if(pantallaActual == RUTAS){
 			mostrarPantallaRutas();
+		}else if(pantallaActual == VUELOS){
+			mostrarPantallaVuelos();
 		}else if(pantallaActual == CLIENTE){
 			mostrarPantallaCliente();
 		}

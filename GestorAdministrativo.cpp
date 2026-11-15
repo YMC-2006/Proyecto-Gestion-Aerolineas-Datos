@@ -39,6 +39,7 @@ string minusculas(string texto){
 	
 GestorAdministrativo::GestorAdministrativo(){
 	cantidadAeronaves = 0;
+	cantidadVuelos = 0;
 	siguienteIdCiudad = 1;
 }
 
@@ -187,6 +188,9 @@ bool GestorAdministrativo::modificarCiudad(int id, string nombre){
 }
 
 bool GestorAdministrativo::eliminarCiudad(int id){
+	for(int i = 0; i < cantidadVuelos; i++){
+		if(vuelos[i].idOrigen == id || vuelos[i].idDestino == id) return false;
+	}
 	return grafo.eliminarCiudad(id);
 }
 
@@ -199,5 +203,52 @@ bool GestorAdministrativo::modificarRuta(int idOrigen, int idDestino, double cos
 }
 
 bool GestorAdministrativo::eliminarRuta(int idOrigen, int idDestino){
+	for(int i = 0; i < cantidadVuelos; i++){
+		if(vuelos[i].idOrigen == idOrigen && vuelos[i].idDestino == idDestino) return false;
+	}
 	return grafo.eliminarRuta(idOrigen, idDestino);
+}
+
+bool GestorAdministrativo::registrarVuelo(string codigo, string placa, int idOrigen, int idDestino){
+	codigo = minusculas(limpiarTexto(codigo));
+	placa = minusculas(limpiarTexto(placa));
+	if(cantidadVuelos >= 50 || codigo.empty()) return false;
+	if(!grafo.existeRuta(idOrigen, idDestino)) return false;
+	for(int i = 0; i < cantidadVuelos; i++){
+		if(vuelos[i].codigo == codigo) return false;
+	}
+	bool existeAeronave = false;
+	for(int i = 0; i < cantidadAeronaves; i++){
+		if(aeronaves[i].placa == placa) existeAeronave = true;
+	}
+	if(!existeAeronave) return false;
+	Vuelo nuevo;
+	nuevo.codigo = codigo;
+	nuevo.placaAeronave = placa;
+	nuevo.idOrigen = idOrigen;
+	nuevo.idDestino = idDestino;
+	vuelos[cantidadVuelos] = nuevo;
+	cantidadVuelos++;
+	return true;
+}
+
+int GestorAdministrativo::obtenerCantidadVuelos(){
+	return cantidadVuelos;
+}
+
+bool GestorAdministrativo::obtenerVueloPorIndice(int indice, Vuelo& resultado){
+	if(indice < 0 || indice >= cantidadVuelos) return false;
+	resultado = vuelos[indice];
+	return true;
+}
+
+bool GestorAdministrativo::obtenerVueloPorCodigo(string codigo, Vuelo& resultado){
+	codigo = minusculas(limpiarTexto(codigo));
+	for(int i = 0; i < cantidadVuelos; i++){
+		if(vuelos[i].codigo == codigo){
+			resultado = vuelos[i];
+			return true;
+		}
+	}
+	return false;
 }

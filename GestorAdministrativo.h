@@ -3,6 +3,7 @@
 
 #include "Grafo.h"
 #include "Aeronave.h"
+#include "Vuelo.h"
 using namespace std;
 
 class GestorAdministrativo {
@@ -11,6 +12,8 @@ private:
 	Aeronave aeronaves[50];
 	int cantidadAeronaves;
 	int siguienteIdCiudad;
+	Vuelo vuelos[50];
+	int cantidadVuelos;
 
 public:
 	GestorAdministrativo();
@@ -33,6 +36,10 @@ public:
 	bool registrarRuta(int idOrigen, int idDestino, double costo, int duracionMinutos);
 	bool modificarRuta(int idOrigen, int idDestino, double costo, int duracionMinutos);
 	bool eliminarRuta(int idOrigen, int idDestino);
+	bool registrarVuelo(string codigo, string placa, int idOrigen, int idDestino);
+	int obtenerCantidadVuelos();
+	bool obtenerVueloPorIndice(int indice, Vuelo& resultado);
+	bool obtenerVueloPorCodigo(string codigo, Vuelo& resultado);
 };
 
 #endif

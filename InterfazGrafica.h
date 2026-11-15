@@ -22,6 +22,9 @@ private:
 	string camposRuta[4]; // Nombre origen, nombre destino, costo, minutos.
 	int campoRutaActivo = -1;
 	string mensajeRuta;
+	string camposVuelo[4]; // Codigo, placa, nombre origen y nombre destino.
+	int campoVueloActivo = -1;
+	string mensajeVuelo;
 	Grafo grafo;
 	Criterio criterioBusqueda;
 	string mensajeCliente;
@@ -64,6 +67,7 @@ private:
 	void mostrarPantallaAeronaves();
 	void mostrarPantallaCiudades();
 	void mostrarPantallaRutas();
+	void mostrarPantallaVuelos();
 	
 	
 	// funciones de la vista del CLIENTE
