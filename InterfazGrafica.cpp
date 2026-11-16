@@ -26,6 +26,10 @@ InterfazGrafica::InterfazGrafica(int ancho, int alto,const char* titulo){
 
 	gestorCliente.setGrafo(gestorAdmin.getGrafo());
 	resultadoRuta.existe = false;
+	
+	
+	rutaMaleta.existe = false;
+	verMaleta = false;
 }
 
 InterfazGrafica::~InterfazGrafica(){
@@ -506,12 +510,6 @@ void InterfazGrafica::mostrarPantallaVuelos(){
 
 
 
-
-
-// ============================= CLIENTE YULI :P ====================================
-// Llena las listas de origen y destino.
-// Se llama una vez, al entrar a la pantalla del cliente.
-
 void InterfazGrafica::mostrarPantallaTripulacion(){
 	DrawTexture(fondoRegistros, 0, 0, WHITE);
 	DrawText("REGISTRAR TRIPULANTE", 295, 175, 30, BLUE);
@@ -824,6 +822,25 @@ void InterfazGrafica::mostrarPantallaPasajeros(){
 	}
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ============================= CLIENTE YULI :P ====================================
+// Llena las listas de origen y destino.
+// Se llama una vez, al entrar a la pantalla del cliente.
+
 void InterfazGrafica::cargarCombosCliente(){
 	resultadoRuta.existe = false;
 	mensajeCliente = ""	;
@@ -872,6 +889,23 @@ void InterfazGrafica::mostrarPantallaCliente(){
 			resultadoRuta.existe = false;
 		}
 	}
+	
+	Rectangle btnMaleta = {50, 520, 600, 50};
+	
+	if(resultadoRuta.existe){
+		dibujarBotonOpcion(btnMaleta, "VER VIAJE DE LA MALETA", verMaleta);
+		
+		if(verMaleta){
+			if(mismaRuta(resultadoRuta, rutaMaleta)){
+				DrawText("La maleta viaja en la misma ruta que usted.", 50, 590, 20, PURPLE);
+			}
+			else{
+				DrawText("La maleta viaja por la ruta mas barata:", 50, 590, 20, PURPLE);
+				DrawText(textoRuta(rutaMaleta).c_str(), 50, 620, 20, PURPLE);
+				DrawText(TextFormat("Costo: $%.2f   Tiempo: %d min", rutaMaleta.costoTotal, rutaMaleta.duracionTotal), 50, 650, 20, PURPLE);
+			}
+		}
+	}
 
 
 
@@ -886,7 +920,9 @@ void InterfazGrafica::mostrarPantallaCliente(){
 	DrawText("BUSCAR RUTA", btnBuscar.x + 80, btnBuscar.y + 15, 26, WHITE);
 
 	DrawText(mensajeCliente.c_str(), 700, 490, 20, RED);
+	dibujarPanelResultado();
 
+	
 	if(!comboDestino.estaAbierta()){
 		comboOrigen.actualizar();
 	}
@@ -914,6 +950,8 @@ void InterfazGrafica::mostrarPantallaCliente(){
 		}
 		else if(CheckCollisionPointRec(mouse, btnBuscar)){
 			buscarRutaCliente();
+		}else if(resultadoRuta.existe && CheckCollisionPointRec(mouse, btnMaleta)){
+			verMaleta = !verMaleta;    // prende y apaga
 		}
 	}
 
@@ -966,43 +1004,50 @@ void InterfazGrafica::dibujarRutasMapa(){
 
 
 // Dibuja cada ciudad como un circulo con su nombre
+void InterfazGrafica::dibujarMapaCliente(){
+	DrawRectangleRounded(mapaCliente, 0.05, 0, WHITE);
+	DrawRectangleRoundedLines(mapaCliente, 0.05, 0, 2, DARKBLUE);
+	
+	dibujarRutasMapa();
+	
+	// la maleta va primero y mas gruesa, para que se vea debajo del pasajero
+	if(verMaleta){
+		dibujarRutaEnMapa(rutaMaleta, PURPLE, 10);
+	}
+	
+	dibujarRutaEnMapa(resultadoRuta, ORANGE, 5);
+	
+	dibujarCiudadesMapa();
+}
+
+// Dibuja cada ciudad como un circulo con su nombre
 void InterfazGrafica::dibujarCiudadesMapa(){
 	Grafo* grafo = gestorAdmin.getGrafo();
 	int cantidad = grafo->obtenerCantidadCiudades();
-
+	
 	for(int i = 0; i < cantidad; i++){
 		Ciudad ciudad;
 		grafo->obtenerCiudadPorIndice(i, ciudad);
-
+		
 		Vector2 posicion = posicionEnMapa(ciudad);
-
+		
 		// color segun si es origen, destino o ninguna
 		Color color = DARKBLUE;
-
+		
 		if(i == comboOrigen.getSeleccionada()){
 			color = GREEN;
 		}
 		else if(i == comboDestino.getSeleccionada()){
 			color = RED;
 		}
-
+		
 		DrawCircleV(posicion, 9, color);
 		DrawCircleLines(posicion.x, posicion.y, 9, BLACK);
-
+		
 		DrawText(ciudad.getNombre().c_str(), posicion.x + 12, posicion.y - 8, 18, BLACK);
 	}
 }
 
-// juntamos todo aca dibujamos el rectangulo del mapa y las lineas
-void InterfazGrafica::dibujarMapaCliente(){
-	DrawRectangleRounded(mapaCliente, 0.05, 0, WHITE);
-	DrawRectangleRoundedLines(mapaCliente, 0.05, 0, 2, DARKBLUE);
-
-	dibujarRutasMapa();
-	//:0
-	dibujarRutaResultado();
-	dibujarCiudadesMapa();
-}
 
 
 void InterfazGrafica::dibujarBotonOpcion(Rectangle boton, const char* texto, bool seleccionado){
@@ -1039,34 +1084,56 @@ void InterfazGrafica::buscarRutaCliente(){
 
 	if(encontrada){
 		mensajeCliente = "";
+		
+		// la maleta SIEMPRE viaja por la ruta mas barata
+		gestorCliente.buscarMejorRuta(origen, destino, POR_COSTO, rutaMaleta);
+		
 	}
 	else{
 		mensajeCliente = "No hay ninguna ruta disponible entre esas ciudades.";
+		rutaMaleta.existe = false;
+		
 	}
+	
+	verMaleta = false;
 }
 
 
-
-// Dibuja encima, mas gruesos, los tramos de la ruta encontrada
-void InterfazGrafica::dibujarRutaResultado(){
-	if(!resultadoRuta.existe){
-		return;
+// Revisa si dos rutas pasan exactamente por las mismas ciudades
+bool InterfazGrafica::mismaRuta(ResultadoRuta& a, ResultadoRuta& b){
+	if(a.largo != b.largo){
+		return false;
 	}
+	
+	for(int k = 0; k < a.largo; k++){
+		if(a.camino[k] != b.camino[k]){
+			return false;
+		}
+	}
+	
+	return true;
+}
 
+// Arma un texto como "San Jose -> Puntarenas -> Liberia"
+string InterfazGrafica::textoRuta(ResultadoRuta& ruta){
 	Grafo* grafo = gestorAdmin.getGrafo();
-
-	for(int k = 0; k < resultadoRuta.largo - 1; k++){
-		Ciudad desde;
-		Ciudad hasta;
-		grafo->obtenerCiudadPorIndice(resultadoRuta.camino[k], desde);
-		grafo->obtenerCiudadPorIndice(resultadoRuta.camino[k + 1], hasta);
-
-		Vector2 inicio = posicionEnMapa(desde);
-		Vector2 fin = posicionEnMapa(hasta);
-
-		DrawLineEx(inicio, fin, 5, ORANGE);
+	string texto = "";
+	
+	for(int k = 0; k < ruta.largo; k++){
+		Ciudad ciudad;
+		grafo->obtenerCiudadPorIndice(ruta.camino[k], ciudad);
+		
+		texto = texto + ciudad.getNombre();
+		
+		if(k < ruta.largo - 1){
+			texto = texto + " -> ";
+		}
 	}
+	
+	return texto;
 }
+
+
 
 
 
@@ -1112,8 +1179,23 @@ void InterfazGrafica::dibujarPanelResultado(){
 
 
 
-
-
+// Dibuja los tramos de una ruta con el color y grosor indicados
+void InterfazGrafica::dibujarRutaEnMapa(ResultadoRuta& ruta, Color color, float grosor){
+	if(!ruta.existe){
+		return;
+	}
+	
+	Grafo* grafo = gestorAdmin.getGrafo();
+	
+	for(int k = 0; k < ruta.largo - 1; k++){
+		Ciudad desde;
+		Ciudad hasta;
+		grafo->obtenerCiudadPorIndice(ruta.camino[k], desde);
+		grafo->obtenerCiudadPorIndice(ruta.camino[k + 1], hasta);
+		
+		DrawLineEx(posicionEnMapa(desde), posicionEnMapa(hasta), grosor, color);
+	}
+}
 
 
 

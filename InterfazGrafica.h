@@ -49,11 +49,18 @@ private:
 	int paginaArbol = 0;
 	int moverArbolX = 0;
 	int moverArbolY = 0;
+	
+	
 	Grafo grafo;
 	Criterio criterioBusqueda;
 	string mensajeCliente;
 	ResultadoRuta resultadoRuta;
-	
+	ResultadoRuta rutaMaleta;
+	bool verMaleta;
+	//Maleta
+	bool mismaRuta(ResultadoRuta& a, ResultadoRuta& b);
+	string textoRuta(ResultadoRuta& ruta);
+	void dibujarRutaEnMapa(ResultadoRuta& ruta, Color color, float grosor);
 	
 	
 	
