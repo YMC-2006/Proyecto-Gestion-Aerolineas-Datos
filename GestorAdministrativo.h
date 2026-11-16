@@ -6,6 +6,7 @@
 #include "Vuelo.h"
 #include "Tripulante.h"
 #include "ArbolCiudades.h"
+#include "ArbolPasajeros.h"
 using namespace std;
 
 class GestorAdministrativo {
@@ -19,6 +20,7 @@ private:
 	Tripulante tripulantes[50];
 	int cantidadTripulantes;
 	ArbolCiudades arbolCiudades;
+	ArbolPasajeros arbolPasajeros;
 
 public:
 	GestorAdministrativo();
@@ -50,6 +52,9 @@ public:
 	bool obtenerTripulantePorIndice(int indice, Tripulante& resultado);
 	bool obtenerTripulantePorIdentificacion(string identificacion, Tripulante& resultado);
 	ArbolCiudades* obtenerArbolCiudades();
+	bool registrarPasajero(string identificacion, string nombre, string codigoVuelo);
+	bool buscarPasajero(string identificacion, string codigoVuelo, Pasajero& resultado);
+	ArbolPasajeros* obtenerArbolPasajeros();
 };
 
 #endif

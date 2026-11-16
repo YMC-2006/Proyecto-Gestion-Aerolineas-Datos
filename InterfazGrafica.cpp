@@ -247,46 +247,37 @@ void InterfazGrafica::mostrarPantallaPrincipal(){
 
 void InterfazGrafica::mostrarPantallaAdministrador(){
 	DrawTexture(fondoRegistros, 0, 0, WHITE);
-
 	DrawText("ADMINISTRACION", 365, 176, 40, BLUE);
-
-	Rectangle btnAeronaves = {380, 235, 300, 50};
-	Rectangle btnCiudades = {380, 305, 300, 50};
-	Rectangle btnRutas = {380, 375, 300, 50};
-	Rectangle btnVuelos = {380, 445, 300, 50};
-	Rectangle btnVolver = {430, 590, 200, 45};
+	Rectangle btnAeronaves = {270,260,240,60};
+	Rectangle btnCiudades = {550,260,240,60};
+	Rectangle btnRutas = {270,350,240,60};
+	Rectangle btnVuelos = {550,350,240,60};
+	Rectangle btnTripulacion = {270,440,240,60};
+	Rectangle btnPasajeros = {550,440,240,60};
+	Rectangle btnVolver = {430,550,200,50};
 	DrawRectangleRec(btnAeronaves, BLUE);
 	DrawRectangleRec(btnCiudades, BLUE);
 	DrawRectangleRec(btnRutas, BLUE);
 	DrawRectangleRec(btnVuelos, BLUE);
-	Rectangle btnTripulacion = {380, 515, 300, 50};
 	DrawRectangleRec(btnTripulacion, BLUE);
-	DrawText("TRIPULACION", 420, 525, 30, WHITE);
-	DrawRectangleLines(430, 590, 200, 45, BLUE);
-
-	DrawText("AERONAVES", 434, 245, 30, WHITE);
-	DrawText("CIUDADES", 445, 315, 30, WHITE);
-	DrawText("RUTAS", 479, 385, 30, WHITE);
-	DrawText("VUELOS", 465, 455, 30, WHITE);
-	DrawText("VOLVER", 475, 600, 25, BLUE);
-
+	DrawRectangleRec(btnPasajeros, BLUE);
+	DrawRectangleLines(430, 550, 200, 50, BLUE);
+	DrawText("AERONAVES", 290, 280, 28, WHITE);
+	DrawText("CIUDADES", 585, 280, 28, WHITE);
+	DrawText("RUTAS", 335, 370, 28, WHITE);
+	DrawText("VUELOS", 615, 370, 28, WHITE);
+	DrawText("TRIPULACION", 285, 460, 28, WHITE);
+	DrawText("PASAJEROS", 580, 460, 28, WHITE);
+	DrawText("VOLVER", 475, 565, 25, BLUE);
 	if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
-
 		Vector2 mouse = GetMousePosition();
-
-		if(CheckCollisionPointRec(mouse, btnAeronaves)){
-			pantallaActual = AERONAVES;
-		}else if(CheckCollisionPointRec(mouse, btnCiudades)){
-			pantallaActual = CIUDADES;
-		}else if(CheckCollisionPointRec(mouse, btnRutas)){
-			pantallaActual = RUTAS;
-		}else if(CheckCollisionPointRec(mouse, btnVuelos)){
-			pantallaActual = VUELOS;
-		}else if(CheckCollisionPointRec(mouse, btnTripulacion)){
-			pantallaActual = TRIPULACION;
-		}else if(CheckCollisionPointRec(mouse, btnVolver)){
-			pantallaActual = PRINCIPAL;
-		}
+		if(CheckCollisionPointRec(mouse, btnAeronaves)) pantallaActual = AERONAVES;
+		else if(CheckCollisionPointRec(mouse, btnCiudades)) pantallaActual = CIUDADES;
+		else if(CheckCollisionPointRec(mouse, btnRutas)) pantallaActual = RUTAS;
+		else if(CheckCollisionPointRec(mouse, btnVuelos)) pantallaActual = VUELOS;
+		else if(CheckCollisionPointRec(mouse, btnTripulacion)) pantallaActual = TRIPULACION;
+		else if(CheckCollisionPointRec(mouse, btnPasajeros)) pantallaActual = PASAJEROS;
+		else if(CheckCollisionPointRec(mouse, btnVolver)) pantallaActual = PRINCIPAL;
 	}
 }
 
@@ -674,6 +665,165 @@ void InterfazGrafica::mostrarPantallaArbolCiudades(){
 	EndScissorMode();
 }
 
+void InterfazGrafica::ubicarNodosPasajero(ArbolPasajeros* arbol, int indice, int nivel, int& posicion, int x[], int y[]){
+	NodoPasajero nodo;
+	if(!arbol->obtenerNodo(indice, nodo)) return;
+	ubicarNodosPasajero(arbol, nodo.izquierdo, nivel + 1, posicion, x, y);
+	x[indice] = 120 + posicion * 140;
+	y[indice] = 290 + nivel * 80;
+	posicion++;
+	ubicarNodosPasajero(arbol, nodo.derecho, nivel + 1, posicion, x, y);
+}
+
+void InterfazGrafica::dibujarNodosPasajero(ArbolPasajeros* arbol, int indice, int x[], int y[]){
+	NodoPasajero nodo;
+	if(!arbol->obtenerNodo(indice, nodo)) return;
+	int px = x[indice] - moverAVLX;
+	int py = y[indice] - moverAVLY;
+	if(nodo.izquierdo != -1){
+		DrawLine(px, py, x[nodo.izquierdo] - moverAVLX, y[nodo.izquierdo] - moverAVLY, BLUE);
+	}
+	if(nodo.derecho != -1){
+		DrawLine(px, py, x[nodo.derecho] - moverAVLX, y[nodo.derecho] - moverAVLY, BLUE);
+	}
+	dibujarNodosPasajero(arbol, nodo.izquierdo, x, y);
+	dibujarNodosPasajero(arbol, nodo.derecho, x, y);
+	Color color = BLUE;
+	if(nodo.pasajero.identificacion == pasajeroEncontrado && nodo.pasajero.codigoVuelo == vueloEncontrado) color = DARKGREEN;
+	DrawRectangle(px - 60, py - 18, 120, 36, color);
+	string etiqueta = nodo.pasajero.identificacion + " / " + nodo.pasajero.codigoVuelo;
+	if(etiqueta.length() > 16) etiqueta = etiqueta.substr(0, 13) + "...";
+	DrawText(etiqueta.c_str(), px - 55, py - 6, 12, WHITE);
+}
+
+void InterfazGrafica::mostrarPantallaArbolPasajeros(){
+	DrawTexture(fondoRegistros, 0, 0, WHITE);
+	DrawRectangle(30, 110, 1140, 610, WHITE);
+	DrawText("AVL DE PASAJEROS", 390, 50, 32, WHITE);
+	DrawText("Identificacion", 60, 110, 16, BLUE);
+	DrawText("Codigo de vuelo", 270, 110, 16, BLUE);
+	Rectangle caja[2] = {{60,130,190,45}, {270,130,140,45}};
+	editarCampos(campoBuscarPasajero, caja, 2, campoBuscarPasajeroActivo);
+	Rectangle buscar = {430,130,140,45};
+	Rectangle inorden = {60,200,180,40};
+	Rectangle preorden = {260,200,180,40};
+	Rectangle postorden = {460,200,180,40};
+	Rectangle anterior = {840,655,130,40};
+	Rectangle siguiente = {990,655,140,40};
+	Rectangle volver = {50,760,180,45};
+	DrawRectangleRec(buscar, BLUE);
+	DrawText("BUSCAR", 448, 142, 22, WHITE);
+	DrawRectangleRec(inorden, BLUE);
+	DrawText("INORDEN", 85, 210, 20, WHITE);
+	DrawRectangleRec(preorden, BLUE);
+	DrawText("PREORDEN", 280, 210, 20, WHITE);
+	DrawRectangleRec(postorden, BLUE);
+	DrawText("POSTORDEN", 475, 210, 20, WHITE);
+	DrawRectangleLines(840, 655, 130, 40, BLUE);
+	DrawText("ANTERIOR", 850, 667, 18, BLUE);
+	DrawRectangleLines(990, 655, 140, 40, BLUE);
+	DrawText("SIGUIENTE", 1000, 667, 18, BLUE);
+	DrawRectangleLines(50, 760, 180, 45, BLUE);
+	DrawText("VOLVER", 80, 773, 22, BLUE);
+	DrawText("Flechas: mover dibujo | Inicio: volver al origen", 60, 695, 18, BLUE);
+	ArbolPasajeros* arbol = gestorAdmin.obtenerArbolPasajeros();
+	Pasajero recorrido[50];
+	int total = arbol->obtenerRecorrido(recorridoAVL, recorrido);
+	if(paginaAVL * 8 >= total) paginaAVL = 0;
+	if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
+		Vector2 mouse = GetMousePosition();
+		if(CheckCollisionPointRec(mouse, volver)) pantallaActual = PASAJEROS;
+		else if(CheckCollisionPointRec(mouse, buscar)){
+			Pasajero encontrado;
+			if(gestorAdmin.buscarPasajero(campoBuscarPasajero[0], campoBuscarPasajero[1], encontrado)){
+				pasajeroEncontrado = encontrado.identificacion;
+				vueloEncontrado = encontrado.codigoVuelo;
+				mensajeAVL = encontrado.nombre + " / vuelo " + encontrado.codigoVuelo;
+			}else{
+				pasajeroEncontrado = "";
+				vueloEncontrado = "";
+				mensajeAVL = "No esta asignado a ese vuelo.";
+			}
+		}else if(CheckCollisionPointRec(mouse, inorden)){ recorridoAVL = 0; paginaAVL = 0; }
+		else if(CheckCollisionPointRec(mouse, preorden)){ recorridoAVL = 1; paginaAVL = 0; }
+		else if(CheckCollisionPointRec(mouse, postorden)){ recorridoAVL = 2; paginaAVL = 0; }
+		else if(CheckCollisionPointRec(mouse, anterior) && paginaAVL > 0) paginaAVL--;
+		else if(CheckCollisionPointRec(mouse, siguiente) && (paginaAVL + 1) * 8 < total) paginaAVL++;
+	}
+	// No mover el dibujo mientras se escribe el nombre de una ciudad.
+	if(campoBuscarPasajeroActivo == -1){
+		if(IsKeyPressed(KEY_RIGHT) && moverAVLX < 7000) moverAVLX += 80;
+		if(IsKeyPressed(KEY_LEFT) && moverAVLX > 0) moverAVLX -= 80;
+		if(IsKeyPressed(KEY_DOWN) && moverAVLY < 4000) moverAVLY += 80;
+		if(IsKeyPressed(KEY_UP) && moverAVLY > 0) moverAVLY -= 80;
+		if(IsKeyPressed(KEY_HOME)){ moverAVLX = 0; moverAVLY = 0; }
+	}
+	int x[50], y[50];
+	int posicion = 0;
+	ubicarNodosPasajero(arbol, arbol->obtenerRaiz(), 0, posicion, x, y);
+	BeginScissorMode(50, 250, 750, 430);
+	dibujarNodosPasajero(arbol, arbol->obtenerRaiz(), x, y);
+	if(total == 0) DrawText("Registre pasajeros para formar el AVL.", 70, 300, 20, BLUE);
+	EndScissorMode();
+	// Volver a obtener el recorrido por si se cambio el boton en este cuadro.
+	arbol->obtenerRecorrido(recorridoAVL, recorrido);
+	DrawText("RECORRIDO", 840, 250, 22, BLUE);
+	const char* nombres[3] = {"Inorden", "Preorden", "Postorden"};
+	DrawText(nombres[recorridoAVL], 840, 280, 20, DARKBLUE);
+	BeginScissorMode(830, 310, 310, 335);
+	for(int i = 0; i < 8 && paginaAVL * 8 + i < total; i++){
+		int indice = paginaAVL * 8 + i;
+		string texto = to_string(indice + 1) + ". " + recorrido[indice].identificacion + " / " + recorrido[indice].codigoVuelo;
+		DrawText(texto.c_str(), 840, 320 + i * 38, 18, DARKBLUE);
+	}
+	EndScissorMode();
+	BeginScissorMode(590, 125, 560, 60);
+	DrawText(mensajeAVL.c_str(), 595, 142, 18, DARKBLUE);
+	EndScissorMode();
+}
+
+void InterfazGrafica::mostrarPantallaPasajeros(){
+	DrawTexture(fondoRegistros, 0, 0, WHITE);
+	DrawText("REGISTRAR PASAJERO", 310, 175, 30, BLUE);
+	DrawText("Identificacion", 270, 245, 22, BLUE);
+	DrawText("Nombre", 550, 245, 22, BLUE);
+	DrawText("Codigo del vuelo", 270, 350, 22, BLUE);
+	Rectangle cajas[3] = {{270,280,240,45}, {550,280,240,45}, {270,385,520,45}};
+	editarCampos(camposPasajero, cajas, 3, campoPasajeroActivo);
+	DrawText("Primero registre el vuelo. Se verifica el cupo de su aeronave.", 270, 460, 16, BLUE);
+	Rectangle volver = {270,510,160,50};
+	Rectangle registrar = {450,510,160,50};
+	Rectangle verArbol = {630,510,160,50};
+	DrawRectangleLines(270, 510, 160, 50, BLUE);
+	DrawText("VOLVER", 300, 527, 20, BLUE);
+	DrawRectangleRec(registrar, BLUE);
+	DrawText("REGISTRAR", 465, 527, 20, WHITE);
+	DrawRectangleLines(630, 510, 160, 50, BLUE);
+	DrawText("VER AVL", 660, 527, 20, BLUE);
+	DrawText(mensajePasajero.c_str(), 270, 580, 15, DARKBLUE);
+	string total = "Asignaciones registradas: " + to_string(gestorAdmin.obtenerArbolPasajeros()->obtenerCantidad()) + " / 50";
+	DrawText(total.c_str(), 270, 615, 18, BLUE);
+	if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
+		Vector2 mouse = GetMousePosition();
+		if(CheckCollisionPointRec(mouse, volver)) pantallaActual = ADMINISTRATIVO;
+		else if(CheckCollisionPointRec(mouse, verArbol)) pantallaActual = AVL_PASAJEROS;
+		else if(CheckCollisionPointRec(mouse, registrar)){
+			Vuelo vuelo;
+			Pasajero existente;
+			if(!gestorAdmin.obtenerVueloPorCodigo(camposPasajero[2], vuelo)){
+				mensajePasajero = "Ese vuelo no esta registrado.";
+			}else if(gestorAdmin.buscarPasajero(camposPasajero[0], camposPasajero[2], existente)){
+				mensajePasajero = "El pasajero ya esta asignado a ese vuelo.";
+			}else if(gestorAdmin.registrarPasajero(camposPasajero[0], camposPasajero[1], camposPasajero[2])){
+				mensajePasajero = "Pasajero registrado en el vuelo y en el AVL.";
+				for(int i = 0; i < 3; i++) camposPasajero[i] = "";
+			}else{
+				mensajePasajero = "Revise nombre/ID, cupo, nombre anterior o limite de 50.";
+			}
+		}
+	}
+}
+
 void InterfazGrafica::cargarCombosCliente(){
 	resultadoRuta.existe = false;
 	mensajeCliente = ""	;
@@ -1002,6 +1152,10 @@ void InterfazGrafica::empezar(){
 			mostrarPantallaTripulacion();
 		}else if(pantallaActual == ABB_CIUDADES){
 			mostrarPantallaArbolCiudades();
+		}else if(pantallaActual == PASAJEROS){
+			mostrarPantallaPasajeros();
+		}else if(pantallaActual == AVL_PASAJEROS){
+			mostrarPantallaArbolPasajeros();
 		}else if(pantallaActual == CLIENTE){
 			mostrarPantallaCliente();
 		}

@@ -29,6 +29,18 @@ private:
 	string camposTripulante[4]; // Identificacion, nombre, cargo y placa.
 	int campoTripulanteActivo = -1;
 	string mensajeTripulante;
+	string camposPasajero[3]; // Identificacion, nombre y codigo de vuelo.
+	int campoPasajeroActivo = -1;
+	string mensajePasajero;
+	string campoBuscarPasajero[2]; // Identificacion y vuelo.
+	int campoBuscarPasajeroActivo = -1;
+	string mensajeAVL;
+	string pasajeroEncontrado;
+	string vueloEncontrado;
+	int recorridoAVL = 0;
+	int paginaAVL = 0;
+	int moverAVLX = 0;
+	int moverAVLY = 0;
 	string campoBuscarCiudad[1];
 	int campoBuscarCiudadActivo = -1;
 	string mensajeArbol;
@@ -82,6 +94,10 @@ private:
 	void mostrarPantallaVuelos();
 	void mostrarPantallaTripulacion();
 	void mostrarPantallaArbolCiudades();
+	void mostrarPantallaPasajeros();
+	void mostrarPantallaArbolPasajeros();
+	void ubicarNodosPasajero(ArbolPasajeros* arbol, int indice, int nivel, int& posicion, int x[], int y[]);
+	void dibujarNodosPasajero(ArbolPasajeros* arbol, int indice, int x[], int y[]);
 	void ubicarNodosCiudad(ArbolCiudades* arbol, int indice, int nivel, int& posicion, int x[], int y[]);
 	void dibujarNodosCiudad(ArbolCiudades* arbol, int indice, int x[], int y[]);
 	

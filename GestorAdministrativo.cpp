@@ -46,6 +46,38 @@ GestorAdministrativo::GestorAdministrativo(){
 
 GestorAdministrativo::~GestorAdministrativo(){}
 
+ArbolPasajeros* GestorAdministrativo::obtenerArbolPasajeros(){
+	return &arbolPasajeros;
+}
+
+bool GestorAdministrativo::buscarPasajero(string identificacion, string codigoVuelo, Pasajero& resultado){
+	return arbolPasajeros.buscar(minusculas(limpiarTexto(identificacion)), minusculas(limpiarTexto(codigoVuelo)), resultado);
+}
+
+bool GestorAdministrativo::registrarPasajero(string identificacion, string nombre, string codigoVuelo){
+	identificacion = minusculas(limpiarTexto(identificacion));
+	nombre = limpiarTexto(nombre);
+	codigoVuelo = minusculas(limpiarTexto(codigoVuelo));
+	if(identificacion.empty() || nombre.empty()) return false;
+	Vuelo vuelo;
+	if(!obtenerVueloPorCodigo(codigoVuelo, vuelo)) return false;
+	int capacidad = 0;
+	for(int i = 0; i < cantidadAeronaves; i++){
+		if(aeronaves[i].placa == vuelo.placaAeronave) capacidad = aeronaves[i].capacidad;
+	}
+	if(arbolPasajeros.contarPorVuelo(codigoVuelo) >= capacidad) return false;
+	Pasajero registros[50];
+	int total = arbolPasajeros.obtenerRecorrido(0, registros);
+	for(int i = 0; i < total; i++){
+		if(registros[i].identificacion == identificacion && minusculas(registros[i].nombre) != minusculas(nombre)) return false;
+	}
+	Pasajero nuevo;
+	nuevo.identificacion = identificacion;
+	nuevo.nombre = nombre;
+	nuevo.codigoVuelo = codigoVuelo;
+	return arbolPasajeros.insertar(nuevo);
+}
+
 ArbolCiudades* GestorAdministrativo::obtenerArbolCiudades(){
 	// Reconstruir con las ciudades actuales evita mantener datos borrados o renombrados.
 	arbolCiudades.limpiar();
