@@ -14,7 +14,7 @@ class InterfazGrafica {
 private:
 	GestorAdministrativo gestorAdmin;
 	GestorCliente gestorCliente;
-	string camposCiudad[3]; // Nombre, X, Y.
+	string camposCiudad[5]; // Nombre, X, Y, nombre actual y nuevo nombre.
 	string camposAeronave[4]; // Placa, capacidad, marca, modelo.
 	int campoCiudadActivo = -1;
 	int campoAeronaveActivo = -1;

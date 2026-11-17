@@ -331,8 +331,8 @@ void InterfazGrafica::mostrarPantallaCiudades(){
 	DrawText("Nombre (el ID se asigna automaticamente)", 270, 245, 20, BLUE);
 	DrawText("X del mapa (0 a 600)", 270, 350, 20, BLUE);
 	DrawText("Y del mapa (0 a 400)", 550, 350, 20, BLUE);
-	Rectangle cajas[3] = {{270,285,520,45}, {270,390,240,45}, {550,390,240,45}};
-	editarCampos(camposCiudad, cajas, 3, campoCiudadActivo);
+	Rectangle cajas[5] = {{270,285,520,45}, {270,390,240,45}, {550,390,240,45}, {270,670,240,40}, {550,670,320,40}};
+	editarCampos(camposCiudad, cajas, 5, campoCiudadActivo);
 	DrawText("Coordenadas dentro del mapa, no de toda la ventana.", 270, 460, 18, BLUE);
 	Rectangle volver = {270,510,160,50};
 	Rectangle registrar = {450,510,160,50};
@@ -351,6 +351,16 @@ void InterfazGrafica::mostrarPantallaCiudades(){
 	DrawText(mensaje.c_str(), 270, 610, 20, BLUE);
 
 
+	DrawText("Nombre actual", 270, 645, 18, BLUE);
+	DrawText("Nuevo nombre (solo para renombrar)", 550, 645, 16, BLUE);
+	Rectangle renombrar = {270,725,240,45};
+	Rectangle eliminar = {550,725,240,45};
+	DrawRectangleRec(renombrar, BLUE);
+	DrawText("RENOMBRAR", 295, 738, 20, WHITE);
+	DrawRectangleRec(eliminar, MAROON);
+	DrawText("ELIMINAR", 590, 738, 20, WHITE);
+
+
 	if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
 		Vector2 mouse = GetMousePosition();
 
@@ -358,6 +368,28 @@ void InterfazGrafica::mostrarPantallaCiudades(){
 			pantallaActual = ADMINISTRATIVO;
 		}else if(CheckCollisionPointRec(mouse, verArbol)){
 			pantallaActual = ABB_CIUDADES;
+		}else if(CheckCollisionPointRec(mouse, renombrar) || CheckCollisionPointRec(mouse, eliminar)){
+			Ciudad ciudad;
+			if(!gestorAdmin.obtenerCiudadPorNombre(camposCiudad[3], ciudad)){
+				mensajeCiudad = "No se encontro la ciudad indicada.";
+			}else{
+				bool cambiar = CheckCollisionPointRec(mouse, renombrar);
+				bool realizada = cambiar
+					? gestorAdmin.modificarCiudad(ciudad.getId(), camposCiudad[4])
+					: gestorAdmin.eliminarCiudad(ciudad.getId());
+				if(realizada){
+					mensajeCiudad = cambiar ? "Ciudad renombrada." : "Ciudad y sus rutas eliminadas.";
+					camposCiudad[3] = "";
+					camposCiudad[4] = "";
+					ciudadEncontrada = -1;
+					mensajeArbol = "";
+					resultadoRuta.existe = false;
+					rutaMaleta.existe = false;
+					verMaleta = false;
+				}else{
+					mensajeCiudad = cambiar ? "Nombre vacio o repetido." : "No se puede eliminar: ciudad asignada a un vuelo.";
+				}
+			}
 		}else if(CheckCollisionPointRec(mouse, registrar)){
 			float x, y;
 
@@ -843,7 +875,9 @@ void InterfazGrafica::mostrarPantallaPasajeros(){
 
 void InterfazGrafica::cargarCombosCliente(){
 	resultadoRuta.existe = false;
-	mensajeCliente = ""	;
+	mensajeCliente = "";
+	rutaMaleta.existe = false;
+	verMaleta = false;
 
 	comboOrigen.limpiar();
 	comboDestino.limpiar();
@@ -887,6 +921,8 @@ void InterfazGrafica::mostrarPantallaCliente(){
 
 		if(primera != comboOrigen.getSeleccionada() || ultima != comboDestino.getSeleccionada()){
 			resultadoRuta.existe = false;
+			rutaMaleta.existe = false;
+			verMaleta = false;
 		}
 	}
 	
@@ -943,10 +979,18 @@ void InterfazGrafica::mostrarPantallaCliente(){
 		else if(CheckCollisionPointRec(mouse, btnCosto)){
 			criterioBusqueda = POR_COSTO;
 			resultadoRuta.existe = false;
+			rutaMaleta.existe = false;
+			verMaleta = false;
+			rutaMaleta.existe = false;
+			verMaleta = false;
 		}
 		else if(CheckCollisionPointRec(mouse, btnTiempo)){
 			criterioBusqueda = POR_TIEMPO;
 			resultadoRuta.existe = false;
+			rutaMaleta.existe = false;
+			verMaleta = false;
+			rutaMaleta.existe = false;
+			verMaleta = false;
 		}
 		else if(CheckCollisionPointRec(mouse, btnBuscar)){
 			buscarRutaCliente();
