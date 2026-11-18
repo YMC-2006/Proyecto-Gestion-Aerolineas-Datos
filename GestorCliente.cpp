@@ -411,7 +411,7 @@ int GestorCliente::buscarVuelosDeTramo(int idOrigen, int idDestino, Vuelo result
 			}
 		}
 		
-		// 1. revisar TODOS los tramos
+		// revisar TODOS los tramos
 		for(int k = 0; k < cantidad; k++){
 			Vuelo vuelo;
 			
@@ -433,7 +433,7 @@ int GestorCliente::buscarVuelosDeTramo(int idOrigen, int idDestino, Vuelo result
 			}
 		}
 		
-		// 2. registrar en todos
+		// registrar en todos
 		for(int k = 0; k < cantidad; k++){
 			if(!admin->registrarPasajero(identificacion, nombre, codigos[k])){
 				mensaje = "No se pudo registrar en el vuelo " + codigos[k] + ".";
