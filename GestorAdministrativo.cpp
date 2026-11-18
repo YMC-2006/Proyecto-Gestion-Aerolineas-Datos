@@ -37,11 +37,16 @@ string minusculas(string texto){
 
 //propios de la clase
 
-GestorAdministrativo::GestorAdministrativo(){
+GestorAdministrativo::GestorAdministrativo(bool cargarInicial){
 	cantidadAeronaves = 0;
 	cantidadVuelos = 0;
 	cantidadTripulantes = 0;
 	siguienteIdCiudad = 1;
+	if(cargarInicial){
+		int registros;
+		string mensaje;
+		cargarArchivo("datos/ejemplo.txt", registros, mensaje);
+	}
 }
 
 GestorAdministrativo::~GestorAdministrativo(){}

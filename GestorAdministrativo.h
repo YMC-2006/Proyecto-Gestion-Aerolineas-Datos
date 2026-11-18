@@ -23,7 +23,7 @@ private:
 	ArbolPasajeros arbolPasajeros;
 
 public:
-	GestorAdministrativo();
+	GestorAdministrativo(bool cargarInicial = true);
 	~GestorAdministrativo();
 
 	bool registrarCiudad(int id, string nombre);
@@ -55,6 +55,7 @@ public:
 	bool registrarPasajero(string identificacion, string nombre, string codigoVuelo);
 	bool buscarPasajero(string identificacion, string codigoVuelo, Pasajero& resultado);
 	ArbolPasajeros* obtenerArbolPasajeros();
+	bool cargarArchivo(string ruta, int& registros, string& mensaje);
 };
 
 #endif

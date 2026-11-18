@@ -1,0 +1,29 @@
+# Datos de ejemplo. Separar con ; y usar punto para los decimales.
+# Primero ciudades y aeronaves; luego rutas, vuelos y personas.
+CIUDAD;Liberia;100;80
+CIUDAD;San Jose;260;200
+CIUDAD;Cartago;340;240
+CIUDAD;Limon;480;140
+CIUDAD;Alajuela;210;170
+CIUDAD;Puntarenas;130;240
+
+AERONAVE;ti-101;40;Cessna;Caravan
+AERONAVE;ti-202;70;ATR;72
+
+RUTA;Liberia;San Jose;80;40
+RUTA;San Jose;Liberia;60;50
+RUTA;Liberia;Cartago;20;90
+RUTA;San Jose;Cartago;30;20
+RUTA;San Jose;Limon;50;30
+RUTA;Cartago;Alajuela;10;70
+RUTA;Limon;Alajuela;40;80
+RUTA;Alajuela;Puntarenas;25;10
+
+VUELO;v001;ti-101;Liberia;San Jose
+VUELO;v002;ti-202;San Jose;Limon
+TRIPULANTE;t01;Ana Demo;Piloto;ti-101
+TRIPULANTE;t02;Luis Demo;Copiloto;ti-202
+PASAJERO;300;Persona C;v001
+PASAJERO;200;Persona B;v001
+PASAJERO;100;Persona A;v001
+PASAJERO;400;Persona D;v002
