@@ -51,7 +51,6 @@ private:
 	int moverArbolY = 0;
 	
 	
-	Grafo grafo;
 	Criterio criterioBusqueda;
 	string mensajeCliente;
 	ResultadoRuta resultadoRuta;
@@ -69,12 +68,9 @@ private:
 	Pantalla pantallaActual = PRINCIPAL;
 	Texture2D fondo;
 	Texture2D fondoRegistros;
-	Rectangle mapaCliente;
+	Texture2D fondoCreditos;
 	
-	
-	// Botones del sistema
-	Texture2D btnCliente; 
-	Texture2D btnAdministrador;
+
 	
 	// Combos para la vista del cliente
 	ListaDesplegable comboOrigen;
@@ -95,6 +91,8 @@ private:
 	void mostrarPantallaPrincipal();
 	void mostrarPantallaCliente();
 	void mostrarPantallaAdministrador();
+	void mostrarPantallaCreditos();
+	
 	void mostrarPantallaAeronaves();
 	void mostrarPantallaCiudades();
 	void mostrarPantallaRutas();
@@ -110,6 +108,9 @@ private:
 	
 	
 	// funciones de la vista del CLIENTE
+	
+	Rectangle mapaCliente;
+	
 	void cargarCombosCliente();
 	void dibujarMapaCliente();
 	void dibujarRutasMapa();
@@ -117,9 +118,26 @@ private:
 	Vector2 posicionEnMapa(Ciudad& ciudad);
 	void dibujarBotonOpcion(Rectangle boton, const char* texto, bool seleccionado);
 	void buscarRutaCliente();
-	
-	void dibujarRutaResultado();
 	void dibujarPanelResultado();
+	
+	
+	// ALGORITMO DE BELLMAN FORD
+	static const int FILAS_DESTINOS = 10;   // cuantas filas se ven a la vez
+	
+	bool mostrandoDestinos;
+	int origenExplorado;
+	double distExplorar[Grafo::N];
+	int previoExplorar[Grafo::N];
+	int ordenDestinos[Grafo::N];
+	int cantidadDestinos;
+	int scrollearDestinos;             // para la rueda del mouse
+	ResultadoRuta rutaExplorada;
+	
+	void limpiarResultadosCliente();
+	void explorarDestinosCliente();
+	void dibujarPanelDestinos();
+	Rectangle filaDestino(int posicion);
+	
 	
 public:
 	InterfazGrafica(int ancho, int alto,const char* titulo);

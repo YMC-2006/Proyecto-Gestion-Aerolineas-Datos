@@ -25,11 +25,11 @@ InterfazGrafica::InterfazGrafica(int ancho, int alto,const char* titulo){
 	mensajeCliente = "";
 
 	gestorCliente.setGrafo(gestorAdmin.getGrafo());
-	resultadoRuta.existe = false;
 	
-	
-	rutaMaleta.existe = false;
-	verMaleta = false;
+	origenExplorado = -1;
+	cantidadDestinos = 0;
+	scrollearDestinos = 0;
+	limpiarResultadosCliente();
 }
 
 InterfazGrafica::~InterfazGrafica(){
@@ -39,11 +39,13 @@ InterfazGrafica::~InterfazGrafica(){
 void InterfazGrafica::cargarAssets(){
 	fondo = LoadTexture("assets/fondoPantallaPrincipal.png");
 	fondoRegistros=LoadTexture("assets/vistaConCuadritoParaRegistros.png");
+	fondoCreditos = LoadTexture("assets/fondoCreditos.png");
 }
 
 void InterfazGrafica::liberarAssets(){
 	UnloadTexture(fondo);
 	UnloadTexture(fondoRegistros);
+	UnloadTexture(fondoCreditos);
 }
 
 // Un solo campo recibe el teclado. Tab cambia al siguiente.
@@ -218,6 +220,8 @@ bool leerCapacidad(string texto, int& capacidad){
 void InterfazGrafica::mostrarPantallaPrincipal(){
 	DrawTexture(fondo, 0, 0, WHITE);
 
+	Vector2 mouse;
+	
 	Rectangle btnCliente = {350, 400, 260, 60};
 	DrawRectangleRec(btnCliente, WHITE);
 	DrawText("Cliente", 400, 420, 30, BLUE);
@@ -225,6 +229,10 @@ void InterfazGrafica::mostrarPantallaPrincipal(){
 	Rectangle btnAdministrador = {650, 400, 260, 60};
 	DrawRectangleRec(btnAdministrador, WHITE);
 	DrawText("Administrador", 680, 420, 30, BLUE);
+	
+	Rectangle btnCreditos = {30, 20, 130, 35};
+	DrawRectangleRec(btnCreditos, WHITE);
+	DrawText("Creditos", 45, 28, 20, BLUE);
 
 
 	DrawText("GESTION DE VUELOS", 300, 100, 60, WHITE);
@@ -232,15 +240,23 @@ void InterfazGrafica::mostrarPantallaPrincipal(){
 	//detectar clicks
 	//si detecto el boton izquierdo del mouse
 	if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
-		Vector2 mouse=GetMousePosition();
+		mouse=GetMousePosition();
+		
+		if(CheckCollisionPointRec(mouse, btnCreditos)){
+			pantallaActual = CREDITOS;
+		}
+	}
+	
+	if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
+		mouse=GetMousePosition();
 
 		if(CheckCollisionPointRec(mouse, btnAdministrador)){
-			pantallaActual=ADMINISTRATIVO;
+			pantallaActual = ADMINISTRATIVO;
 		}
 	}
 
 	if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
-		Vector2 mouse = GetMousePosition();
+		mouse = GetMousePosition();
 		if(CheckCollisionPointRec(mouse, btnCliente)){
 			cargarCombosCliente();
 			pantallaActual = CLIENTE;
@@ -857,27 +873,13 @@ void InterfazGrafica::mostrarPantallaPasajeros(){
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
 // ============================= CLIENTE YULI :P ====================================
 // Llena las listas de origen y destino.
 // Se llama una vez, al entrar a la pantalla del cliente.
 
 void InterfazGrafica::cargarCombosCliente(){
-	resultadoRuta.existe = false;
+	limpiarResultadosCliente();
 	mensajeCliente = "";
-	rutaMaleta.existe = false;
-	verMaleta = false;
 
 	comboOrigen.limpiar();
 	comboDestino.limpiar();
@@ -894,38 +896,41 @@ void InterfazGrafica::cargarCombosCliente(){
 }
 
 
+
 void InterfazGrafica::mostrarPantallaCliente(){
-
+	
 	ClearBackground(WHITE);
-
+	
+	// encabezado
 	Rectangle encabezado = {0, 0, 1300, 70};
 	DrawRectangleRec(encabezado, BLUE);
 	DrawText("Seleccion de viaje", 500, 10, 40, WHITE);
-
+	
 	Rectangle btnVolver = {10, 10, 150, 50};
 	DrawRectangleLinesEx(btnVolver, 2, WHITE);
 	DrawText("VOLVER", 25, 25, 25, WHITE);
-
-	// mapa con las ciudades y rutas registradas
+	
+	// mapa con las ciudades, rutas y resultados
 	dibujarMapaCliente();
-
-	// panel de busqueda
+	
 	DrawText("DESDE", 700, 120, 20, BLACK);
 	DrawText("HASTA", 1000, 120, 20, BLACK);
-
-
-	// si cambio la seleccion, el resultado anterior ya no sirve
+	
+	// si cambio la seleccion, los resultados anteriores ya no sirven
 	if(resultadoRuta.existe){
 		int primera = resultadoRuta.camino[0];
 		int ultima = resultadoRuta.camino[resultadoRuta.largo - 1];
-
+		
 		if(primera != comboOrigen.getSeleccionada() || ultima != comboDestino.getSeleccionada()){
-			resultadoRuta.existe = false;
-			rutaMaleta.existe = false;
-			verMaleta = false;
+			limpiarResultadosCliente();
 		}
 	}
 	
+	if(mostrandoDestinos && comboOrigen.getSeleccionada() != origenExplorado){
+		limpiarResultadosCliente();
+	}
+	
+	// ---------- debajo del mapa ----------
 	Rectangle btnMaleta = {50, 520, 600, 50};
 	
 	if(resultadoRuta.existe){
@@ -942,22 +947,33 @@ void InterfazGrafica::mostrarPantallaCliente(){
 			}
 		}
 	}
-
-
-
+	
+	// detalle del destino escogido en la lista
+	if(rutaExplorada.existe){
+		DrawText("Ruta al destino seleccionado:", 50, 530, 20, DARKGREEN);
+		DrawText(textoRuta(rutaExplorada).c_str(), 50, 560, 20, DARKGREEN);
+		DrawText(TextFormat("Escalas: %d   Costo: $%.2f   Tiempo: %d min", rutaExplorada.largo - 2, rutaExplorada.costoTotal, rutaExplorada.duracionTotal), 50, 590, 20, DARKGREEN);
+	}
+	
+	// ---------- panel derecho ----------
 	Rectangle btnCosto = {700, 330, 250, 45};
 	Rectangle btnTiempo = {1000, 330, 250, 45};
-	Rectangle btnBuscar = {800, 410, 350, 55};
-
+	Rectangle btnBuscar = {700, 400, 270, 55};
+	Rectangle btnDestinos = {985, 400, 265, 55};
+	
 	dibujarBotonOpcion(btnCosto, "MAS BARATA", criterioBusqueda == POR_COSTO);
 	dibujarBotonOpcion(btnTiempo, "MAS RAPIDA", criterioBusqueda == POR_TIEMPO);
-
+	
 	DrawRectangleRec(btnBuscar, DARKBLUE);
-	DrawText("BUSCAR RUTA", btnBuscar.x + 80, btnBuscar.y + 15, 26, WHITE);
-
-	DrawText(mensajeCliente.c_str(), 700, 490, 20, RED);
+	DrawText("BUSCAR RUTA", btnBuscar.x + 45, btnBuscar.y + 15, 26, WHITE);
+	
+	DrawRectangleRec(btnDestinos, DARKGREEN);
+	DrawText("VER DESTINOS", btnDestinos.x + 35, btnDestinos.y + 15, 26, WHITE);
+	
+	DrawText(mensajeCliente.c_str(), 700, 470, 20, RED);
+	
 	dibujarPanelResultado();
-
+	dibujarPanelDestinos();
 	
 	if(!comboDestino.estaAbierta()){
 		comboOrigen.actualizar();
@@ -965,45 +981,71 @@ void InterfazGrafica::mostrarPantallaCliente(){
 	if(!comboOrigen.estaAbierta()){
 		comboDestino.actualizar();
 	}
-
-
-	// clics de los botones
+	
 	bool hayListaAbierta = comboOrigen.estaAbierta() || comboDestino.estaAbierta();
-
+	
+	// ---------- rueda del mouse en la lista de destinos ----------
+	if(!hayListaAbierta && mostrandoDestinos){
+		float rueda = GetMouseWheelMove();
+		
+		if(rueda < 0 && scrollearDestinos + FILAS_DESTINOS < cantidadDestinos){
+			scrollearDestinos++;
+		}
+		if(rueda > 0 && scrollearDestinos > 0){
+			scrollearDestinos--;
+		}
+	}
+	
 	if(!hayListaAbierta && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
 		Vector2 mouse = GetMousePosition();
-
+		
 		if(CheckCollisionPointRec(mouse, btnVolver)){
 			pantallaActual = PRINCIPAL;
 		}
 		else if(CheckCollisionPointRec(mouse, btnCosto)){
 			criterioBusqueda = POR_COSTO;
-			resultadoRuta.existe = false;
-			rutaMaleta.existe = false;
-			verMaleta = false;
-			rutaMaleta.existe = false;
-			verMaleta = false;
+			limpiarResultadosCliente();
 		}
 		else if(CheckCollisionPointRec(mouse, btnTiempo)){
 			criterioBusqueda = POR_TIEMPO;
-			resultadoRuta.existe = false;
-			rutaMaleta.existe = false;
-			verMaleta = false;
-			rutaMaleta.existe = false;
-			verMaleta = false;
+			limpiarResultadosCliente();
 		}
 		else if(CheckCollisionPointRec(mouse, btnBuscar)){
+			limpiarResultadosCliente();
 			buscarRutaCliente();
-		}else if(resultadoRuta.existe && CheckCollisionPointRec(mouse, btnMaleta)){
-			verMaleta = !verMaleta;    // prende y apaga
+		}
+		else if(CheckCollisionPointRec(mouse, btnDestinos)){
+			explorarDestinosCliente();
+		}
+		else if(resultadoRuta.existe && CheckCollisionPointRec(mouse, btnMaleta)){
+			verMaleta = !verMaleta;
+		}
+		else if(mostrandoDestinos){
+			// ver si toco alguna fila de la lista
+			for(int p = 0; p < FILAS_DESTINOS; p++){
+				int posicionLista = scrollearDestinos + p;
+				
+				if(posicionLista >= cantidadDestinos){
+					break;
+				}
+				
+				if(CheckCollisionPointRec(mouse, filaDestino(p))){
+					int ciudadIndice = ordenDestinos[posicionLista];
+					
+					if(distExplorar[ciudadIndice] != INFINITO){
+						gestorCliente.armarCamino(origenExplorado, ciudadIndice, previoExplorar, distExplorar, rutaExplorada);
+					}
+				}
+			}
 		}
 	}
-
-
+	
 	// las listas van de ultimo para que queden encima de todo
 	comboDestino.dibujar();
 	comboOrigen.dibujar();
 }
+
+
 
 // Las coordenadas de la ciudad estan guardadas en un mapa de 600 x 400.
 // Esta funcion las pasa a la posicion real dentro del mapa del cliente.
@@ -1019,7 +1061,7 @@ Vector2 InterfazGrafica::posicionEnMapa(Ciudad& ciudad){
 }
 
 
-// Dibuja una linea por cada ruta registrada en el grafo
+// Dibuja una linea gris por cada ruta registrada en el grafo
 void InterfazGrafica::dibujarRutasMapa(){
 	Grafo* grafo = gestorAdmin.getGrafo();
 	int cantidad = grafo->obtenerCantidadCiudades();
@@ -1060,7 +1102,7 @@ void InterfazGrafica::dibujarMapaCliente(){
 	}
 	
 	dibujarRutaEnMapa(resultadoRuta, ORANGE, 5);
-	
+	dibujarRutaEnMapa(rutaExplorada, DARKGREEN, 5);
 	dibujarCiudadesMapa();
 }
 
@@ -1239,14 +1281,141 @@ void InterfazGrafica::dibujarRutaEnMapa(ResultadoRuta& ruta, Color color, float 
 		
 		DrawLineEx(posicionEnMapa(desde), posicionEnMapa(hasta), grosor, color);
 	}
+
+}
+
+// limpiar un poquito la pantalla
+void InterfazGrafica::limpiarResultadosCliente(){
+	resultadoRuta.existe = false;
+	rutaMaleta.existe = false;
+	verMaleta = false;
+	
+	mostrandoDestinos = false;
+	rutaExplorada.existe = false;
+}
+
+
+// Ejecuta Bellman-Ford desde el origen seleccionado
+void InterfazGrafica::explorarDestinosCliente(){
+	int origen = comboOrigen.getSeleccionada();
+	
+	limpiarResultadosCliente();
+	
+	if(origen == -1){
+		mensajeCliente = "Seleccione la ciudad de origen.";
+		return;
+	}
+	
+	bool calculado = gestorCliente.bellmanFord(origen, criterioBusqueda, distExplorar, previoExplorar);
+	
+	if(!calculado){
+		// validacion x si acaso ya que no se usara
+		mensajeCliente = "No se pudieron calcular los destinos, debido a un origen invalido o numero negativo..";
+		return;
+	}
+	
+	cantidadDestinos = gestorCliente.ordenarDestinos(origen, distExplorar, ordenDestinos);
+	
+	origenExplorado = origen;
+	scrollearDestinos = 0;
+	mostrandoDestinos = true;
+	mensajeCliente = "";
+	
+	if(cantidadDestinos == 0){
+		mensajeCliente = "No hay otras ciudades registradas.";
+	}
+}
+
+
+// Rectangulo de cada fila visible de la lista de destinos
+Rectangle InterfazGrafica::filaDestino(int posicion){
+	Rectangle fila = {700, 550 + posicion * 31.0f, 550, 28};
+	return fila;
+}
+
+
+// Lista de destinos ordenada, con su total
+void InterfazGrafica::dibujarPanelDestinos(){
+	if(!mostrandoDestinos){
+		return;
+	}
+	
+	Grafo* grafo = gestorAdmin.getGrafo();
+	
+	Ciudad origen;
+	grafo->obtenerCiudadPorIndice(origenExplorado, origen);
+	
+	string titulo = "Destinos desde " + origen.getNombre();
+	DrawText(titulo.c_str(), 700, 500, 22, DARKBLUE);
+	
+	if(criterioBusqueda == POR_COSTO){
+		DrawText("Ordenados del mas barato al mas caro", 700, 525, 16, GRAY);
+	}else{
+		DrawText("Ordenados del mas rapido al mas lento", 700, 525, 16, GRAY);
+	}
+	
+	Vector2 mouse = GetMousePosition();
+	
+	for(int p = 0; p < FILAS_DESTINOS; p++){
+		int posicionLista = scrollearDestinos + p;
+		
+		if(posicionLista >= cantidadDestinos){
+			break;
+		}
+		
+		int ciudadIndice = ordenDestinos[posicionLista];
+		bool alcanzable = distExplorar[ciudadIndice] != INFINITO;
+		
+		Rectangle fila = filaDestino(p);
+		
+		// color de fondo de la fila seleccionada, mouse encima o normal
+		Color fondoFila = RAYWHITE;
+		
+		if(rutaExplorada.existe && rutaExplorada.camino[rutaExplorada.largo - 1] == ciudadIndice){
+			fondoFila = SKYBLUE;
+		}else if(alcanzable && CheckCollisionPointRec(mouse, fila)){
+			fondoFila = LIGHTGRAY;
+		}
+		
+		DrawRectangleRec(fila, fondoFila);
+		DrawRectangleLinesEx(fila, 1, LIGHTGRAY);
+		
+		Ciudad ciudad;
+		grafo->obtenerCiudadPorIndice(ciudadIndice, ciudad);
+		
+		DrawText(ciudad.getNombre().c_str(), fila.x + 10, fila.y + 5, 18, BLACK);
+		
+		// total segun el criterio
+		if(!alcanzable){
+			DrawText("Sin ruta", fila.x + 380, fila.y + 5, 18, GRAY);
+		}
+		else if(criterioBusqueda == POR_COSTO){
+			DrawText(TextFormat("$%.2f", distExplorar[ciudadIndice]), fila.x + 380, fila.y + 5, 18, DARKGREEN);
+		}else{
+			DrawText(TextFormat("%d min", (int)distExplorar[ciudadIndice]), fila.x + 380, fila.y + 5, 18, DARKGREEN);
+		}
+	}
+	
+	if(cantidadDestinos > FILAS_DESTINOS){
+		DrawText("Use la rueda del mouse para ver mas", 700, 865, 16, GRAY);
+	}
 }
 
 
 
-
-
-
-
+void InterfazGrafica::mostrarPantallaCreditos(){
+	DrawTexture(fondoCreditos, 0, 0, WHITE);
+	
+	Rectangle btnVolver = {30, 20, 150, 45};
+	DrawRectangleRec(btnVolver, WHITE);
+	DrawText("VOLVER", 55, 32, 22, BLUE);
+	
+	if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
+		if(CheckCollisionPointRec(GetMousePosition(), btnVolver)){
+			pantallaActual = PRINCIPAL;
+		}
+	}
+}
 
 
 
@@ -1269,8 +1438,7 @@ void InterfazGrafica::empezar(){
 		}
 		else if(pantallaActual == CIUDADES){
 			mostrarPantallaCiudades();
-		}
-		else if(pantallaActual == RUTAS){
+		}else if(pantallaActual == RUTAS){
 			mostrarPantallaRutas();
 		}else if(pantallaActual == VUELOS){
 			mostrarPantallaVuelos();
@@ -1284,12 +1452,16 @@ void InterfazGrafica::empezar(){
 			mostrarPantallaArbolPasajeros();
 		}else if(pantallaActual == CLIENTE){
 			mostrarPantallaCliente();
+		}else if (pantallaActual == CREDITOS){
+			mostrarPantallaCreditos();
 		}
 
 
 		EndDrawing();
 	}
 
+	liberarAssets();
+	CloseAudioDevice();
 	CloseWindow();
 
 }

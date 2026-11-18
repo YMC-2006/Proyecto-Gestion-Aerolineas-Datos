@@ -1,7 +1,9 @@
 #include "GestorCliente.h"
 #include "Pila.h"
+#include "Grafo.h"
+#include "Criterio.h"
+#include "ResultadoRuta.h"
 
-const double INFINITO = 999999999.0;
 
 GestorCliente::GestorCliente(){
 	grafo = nullptr;
@@ -13,7 +15,6 @@ void GestorCliente::setGrafo(Grafo* grafo){
 
 
 // Algoritmo de Dijkstra busca el camino de menor costo o menor tiempo entre dos ciudades.
-// origen y destino son INDICES (los mismos de las listas desplegables).
 bool GestorCliente::buscarMejorRuta(int origen, int destino, Criterio criterio, ResultadoRuta& resultado){
 
 	resultado.largo = 0;
@@ -122,4 +123,160 @@ bool GestorCliente::buscarMejorRuta(int origen, int destino, Criterio criterio, 
 
 	resultado.existe = true;
 	return true;
+}
+
+
+
+// ======================= Algoritmo de Bellman-Ford
+
+// calcula la mejor ruta desde "origen" hacia TODAS las ciudades.
+// Llena dist[] (total para llegar a cada ciudad) y previo[] (desde donde se llego).
+// Devuelve false si el origen no es valido o si hay un ciclo negativo.
+bool GestorCliente::bellmanFord(int origen, Criterio criterio, double dist[], int previo[]){
+	if(grafo == nullptr){
+		return false;
+	}
+	
+	int cantidad = grafo->obtenerCantidadCiudades();
+	if(origen < 0 || origen >= cantidad){
+		return false;
+	}
+	// Al inicio solo se sabe llegar al origen
+	for(int i = 0; i < cantidad; i++){
+		dist[i] = INFINITO;
+		previo[i] = -1;
+	}
+	
+	dist[origen] = 0;
+	
+	// revisar vuelta tras vuelta
+	for(int vuelta = 1; vuelta <= cantidad - 1; vuelta++){
+		
+		bool huboCambio = false;
+		
+		for(int i = 0; i < cantidad; i++){
+			
+			// si todavia no se sabe llegar a i, no se puede salir de ahi
+			if(dist[i] == INFINITO){
+				continue;
+			}
+			
+			for(int j = 0; j < cantidad; j++){
+				
+				if(i == j){
+					continue;
+				}
+				
+				double peso = grafo->obtenerPeso(i, j, criterio);
+				
+				if(peso == -1){
+					continue;   // no hay ruta de i a j
+				}
+				
+				if(dist[i] + peso < dist[j]){
+					dist[j] = dist[i] + peso;
+					previo[j] = i;
+					huboCambio = true;
+				}
+			}
+		}
+		
+		// si en una vuelta no cambio nada, ya estan todas listas
+		if(!huboCambio){
+			break;
+		}
+	}
+	
+	// una vuelta mas si algo todavia mejora, hay un ciclo negativo
+	for(int i = 0; i < cantidad; i++){
+		
+		if(dist[i] == INFINITO){
+			continue;
+		}
+		
+		for(int j = 0; j < cantidad; j++){
+			
+			if(i == j){
+				continue;
+			}
+			
+			double peso = grafo->obtenerPeso(i, j, criterio);
+			
+			if(peso != -1 && dist[i] + peso < dist[j]){
+				return false;
+			}
+		}
+	}
+	
+	return true;
+}
+
+
+// Con el arreglo previo[] arma el camino de origen a destino
+// (sirve con el resultado de Bellman-Ford)
+bool GestorCliente::armarCamino(int origen, int destino, int previo[], double dist[], ResultadoRuta& resultado){
+	
+	resultado.largo = 0;
+	resultado.costoTotal = 0;
+	resultado.duracionTotal = 0;
+	resultado.existe = false;
+	
+	if(dist[destino] == INFINITO){
+		return false;
+	}
+	
+	// de destino hacia atras, la pila lo voltea
+	Pila pila;
+	int ciudad = destino;
+	
+	while(ciudad != -1){
+		pila.push(ciudad);
+		ciudad = previo[ciudad];
+	}
+	
+	while(!pila.vacia()){
+		resultado.camino[resultado.largo] = pila.pop();
+		resultado.largo++;
+	}
+	
+	// sumar costo y tiempo de cada tramo
+	for(int k = 0; k < resultado.largo - 1; k++){
+		int desde = resultado.camino[k];
+		int hasta = resultado.camino[k + 1];
+		
+		resultado.costoTotal += grafo->obtenerPeso(desde, hasta, POR_COSTO);
+		resultado.duracionTotal += (int)grafo->obtenerPeso(desde, hasta, POR_TIEMPO);
+	}
+	
+	resultado.existe = true;
+	return true;
+}
+
+
+int GestorCliente::ordenarDestinos(int origen, double dist[], int orden[]){
+	int cantidad = grafo->obtenerCantidadCiudades();
+	int total = 0;
+	
+
+	for(int i = 0; i < cantidad; i++){
+		if(i != origen){
+			orden[total] = i;
+			total++;
+		}
+	}
+	
+	// insercion cada ciudad se mueve hacia atras hasta su lugar
+	for(int i = 1; i < total; i++){
+		int actual = orden[i];
+		int j = i - 1;
+		
+		while(j >= 0 && dist[orden[j]] > dist[actual]){
+			orden[j + 1] = orden[j];
+			j--;
+		}
+		
+		orden[j + 1] = actual;
+	}
+	
+	return total;
 }
