@@ -282,21 +282,24 @@ void InterfazGrafica::mostrarPantallaAdministrador(){
 	Rectangle btnVuelos = {550,350,240,60};
 	Rectangle btnTripulacion = {270,440,240,60};
 	Rectangle btnPasajeros = {550,440,240,60};
-	Rectangle btnVolver = {430,550,200,50};
+	Rectangle btnExpansion = {270,530,520,50};
+	Rectangle btnVolver = {430,610,200,50};
 	DrawRectangleRec(btnAeronaves, BLUE);
 	DrawRectangleRec(btnCiudades, BLUE);
 	DrawRectangleRec(btnRutas, BLUE);
 	DrawRectangleRec(btnVuelos, BLUE);
 	DrawRectangleRec(btnTripulacion, BLUE);
 	DrawRectangleRec(btnPasajeros, BLUE);
-	DrawRectangleLines(430, 550, 200, 50, BLUE);
+	DrawRectangleRec(btnExpansion, DARKBLUE);
+	DrawText("ARBOLES DE EXPANSION", 330, 546, 25, WHITE);
+	DrawRectangleLinesEx(btnVolver, 2, BLUE);
 	DrawText("AERONAVES", 290, 280, 28, WHITE);
 	DrawText("CIUDADES", 585, 280, 28, WHITE);
 	DrawText("RUTAS", 335, 370, 28, WHITE);
 	DrawText("VUELOS", 615, 370, 28, WHITE);
 	DrawText("TRIPULACION", 285, 460, 28, WHITE);
 	DrawText("PASAJEROS", 580, 460, 28, WHITE);
-	DrawText("VOLVER", 475, 565, 25, BLUE);
+	DrawText("VOLVER", 475, 625, 25, BLUE);
 	if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
 		Vector2 mouse = GetMousePosition();
 		if(CheckCollisionPointRec(mouse, btnAeronaves)) pantallaActual = AERONAVES;
@@ -305,6 +308,10 @@ void InterfazGrafica::mostrarPantallaAdministrador(){
 		else if(CheckCollisionPointRec(mouse, btnVuelos)) pantallaActual = VUELOS;
 		else if(CheckCollisionPointRec(mouse, btnTripulacion)) pantallaActual = TRIPULACION;
 		else if(CheckCollisionPointRec(mouse, btnPasajeros)) pantallaActual = PASAJEROS;
+		else if(CheckCollisionPointRec(mouse, btnExpansion)){
+			calcularExpansion();
+			pantallaActual = ARBOLES_EXPANSION;
+		}
 		else if(CheckCollisionPointRec(mouse, btnVolver)) pantallaActual = PRINCIPAL;
 	}
 }
@@ -1504,6 +1511,9 @@ void InterfazGrafica::empezar(){
 
 		if(pantallaActual == PRINCIPAL){
 			mostrarPantallaPrincipal();
+		}
+		else if(pantallaActual == ARBOLES_EXPANSION){
+			mostrarPantallaExpansion();
 		}
 		else if(pantallaActual == ADMINISTRATIVO){
 			mostrarPantallaAdministrador();

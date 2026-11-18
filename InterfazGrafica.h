@@ -8,6 +8,7 @@
 #include "Criterio.h"
 #include "GestorCliente.h"
 #include "ResultadoRuta.h"
+#include "ArbolExpansion.h"
 #include "Animacion.h"
 
 class InterfazGrafica {
@@ -97,6 +98,16 @@ private:
 	void mostrarPantallaCliente();
 	void mostrarPantallaAdministrador();
 	void mostrarPantallaCreditos();
+	ArbolExpansion algoritmosExpansion;
+	ResultadoExpansion resultadoExpansion;
+	bool expansionPorCosto = true;
+	int recorridoExpansion = 0;
+	int paginaExpansion = 0;
+	float moverExpansionX = 0;
+	float moverExpansionY = 0;
+	void calcularExpansion();
+	void mostrarPantallaExpansion();
+	void ubicarExpansion(int actual, int padre, bool visitados[], int nivel, int& columna, Vector2 posiciones[]);
 	
 	void mostrarPantallaAeronaves();
 	void mostrarPantallaCiudades();
