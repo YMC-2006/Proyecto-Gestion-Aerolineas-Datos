@@ -7,10 +7,15 @@
 
 GestorCliente::GestorCliente(){
 	grafo = nullptr;
+	admin = nullptr;
 }
 
 void GestorCliente::setGrafo(Grafo* grafo){
 	this->grafo = grafo;
+}
+
+void GestorCliente::setAdmin(GestorAdministrativo* admin){
+	this->admin = admin;
 }
 
 
@@ -280,3 +285,164 @@ int GestorCliente::ordenarDestinos(int origen, double dist[], int orden[]){
 	
 	return total;
 }
+
+// para reservacionnn
+// Pasa un texto a minusculas (para comparar placas y codigos sin importar mayusculas)
+string aMinusculas(string texto){
+	for(int i = 0; i < (int)texto.length(); i++){
+		if(texto[i] >= 'A' && texto[i] <= 'Z'){
+			texto[i] = texto[i] - 'A' + 'a';
+		}
+	}
+	return texto;
+}
+
+// Llena "resultado" con los vuelos que cubren el tramo idOrigen -> idDestino.
+// Devuelve cuantos encontro.
+int GestorCliente::buscarVuelosDeTramo(int idOrigen, int idDestino, Vuelo resultado[]){
+	int encontrados = 0;
+	
+	if(admin == nullptr){
+		return 0;
+	}
+		
+	for(int i = 0; i < admin->obtenerCantidadVuelos(); i++){
+		Vuelo vuelo;
+	
+		if(admin->obtenerVueloPorIndice(i, vuelo)){
+			if(vuelo.idOrigen == idOrigen && vuelo.idDestino == idDestino){
+				resultado[encontrados] = vuelo;
+				encontrados++;
+			}
+		}
+	}
+	
+	return encontrados;
+}
+	
+	
+	// Busca la aeronave que tiene esa placa
+	bool GestorCliente::obtenerAeronave(string placa, Aeronave& resultado){
+		if(admin == nullptr){
+			return false;
+		}
+		
+		for(int i = 0; i < admin->obtenerCantidadAeronaves(); i++){
+			Aeronave aeronave;
+			
+			if(admin->obtenerAeronavePorIndice(i, aeronave)){
+				if(aMinusculas(aeronave.placa) == aMinusculas(placa)){
+					resultado = aeronave;
+					return true;
+				}
+			}
+		}
+		
+		return false;
+	}
+	
+	
+	// Capacidad de la aeronave menos los pasajeros ya asignados al vuelo.
+	// Los pasajeros se cuentan recorriendo el AVL.
+	int GestorCliente::cuposDisponibles(Vuelo& vuelo){
+		Aeronave aeronave;
+		
+		if(!obtenerAeronave(vuelo.placaAeronave, aeronave)){
+			return 0;
+		}
+		
+		Pasajero lista[50];
+		int total = admin->obtenerArbolPasajeros()->obtenerRecorrido(0, lista);
+		
+		int ocupados = 0;
+		
+		for(int i = 0; i < total; i++){
+			if(aMinusculas(lista[i].codigoVuelo) == aMinusculas(vuelo.codigo)){
+				ocupados++;
+			}
+		}
+		
+		int cupos = aeronave.capacidad - ocupados;
+		
+		if(cupos < 0){
+			cupos = 0;
+		}
+		
+		return cupos;
+	}
+	
+	
+	// Registra al pasajero en todos los vuelos del viaje.
+	// Primero REVISA todos los tramos y solo si todos estan bien los REGISTRA,
+	// asi el pasajero nunca queda registrado a medias.
+	bool GestorCliente::reservarViaje(string identificacion, string nombre, string codigos[], int cantidad, string& mensaje){
+		
+		if(admin == nullptr){
+			mensaje = "Error interno: no hay gestor administrativo.";
+			return false;
+		}
+		
+		if(identificacion == "" || nombre == ""){
+			mensaje = "Escriba su identificacion y su nombre.";
+			return false;
+		}
+		
+		if(cantidad <= 0){
+			mensaje = "No hay vuelos para reservar.";
+			return false;
+		}
+		
+		ArbolPasajeros* arbol = admin->obtenerArbolPasajeros();
+		
+		// el AVL guarda maximo 50 asignaciones
+		if(arbol->obtenerCantidad() + cantidad > 50){
+			mensaje = "Ya no hay espacio para mas reservas (maximo 50).";
+			return false;
+		}
+		
+		// si la identificacion ya existe, el nombre tiene que coincidir
+		Pasajero lista[50];
+		int total = arbol->obtenerRecorrido(0, lista);
+		
+		for(int i = 0; i < total; i++){
+			if(lista[i].identificacion == identificacion && aMinusculas(lista[i].nombre) != aMinusculas(nombre)){
+				mensaje = "Esa identificacion ya esta registrada como " + lista[i].nombre + ".";
+				return false;
+			}
+		}
+		
+		// 1. revisar TODOS los tramos
+		for(int k = 0; k < cantidad; k++){
+			Vuelo vuelo;
+			
+			if(!admin->obtenerVueloPorCodigo(codigos[k], vuelo)){
+				mensaje = "El vuelo " + codigos[k] + " ya no existe.";
+				return false;
+			}
+			
+			Pasajero existente;
+			
+			if(admin->buscarPasajero(identificacion, codigos[k], existente)){
+				mensaje = "Ya esta asignado al vuelo " + codigos[k] + ".";
+				return false;
+			}
+			
+			if(cuposDisponibles(vuelo) <= 0){
+				mensaje = "El vuelo " + codigos[k] + " esta lleno.";
+				return false;
+			}
+		}
+		
+		// 2. registrar en todos
+		for(int k = 0; k < cantidad; k++){
+			if(!admin->registrarPasajero(identificacion, nombre, codigos[k])){
+				mensaje = "No se pudo registrar en el vuelo " + codigos[k] + ".";
+				return false;
+			}
+		}
+		
+		mensaje = "Viaje reservado en " + to_string(cantidad) + " vuelo(s).";
+		return true;
+}
+
+

@@ -155,6 +155,24 @@ private:
 	Rectangle filaDestino(int posicion);
 	
 	
+	// reservar
+	// RESERVAR VUELOS
+	static const int MAX_TRAMOS = 8;
+	
+	ListaDesplegable listasTramos[MAX_TRAMOS];
+	string codigosTramo[MAX_TRAMOS][50];     // codigo de cada opcion de cada lista
+	int cantidadVuelosTramo[MAX_TRAMOS];
+	int cantidadTramos;
+	
+	string camposReserva[2];                 // identificacion y nombre
+	int campoReservaActivo = -1;
+	string mensajeReserva;
+	bool reservaExitosa;
+	
+	void prepararReserva();
+	void mostrarPantallaReservar();
+	void confirmarReserva();
+	
 public:
 	InterfazGrafica(int ancho, int alto,const char* titulo);
 	~InterfazGrafica(); // destructor :p

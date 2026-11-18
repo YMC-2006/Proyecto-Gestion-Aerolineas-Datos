@@ -31,6 +31,10 @@ InterfazGrafica::InterfazGrafica(int ancho, int alto,const char* titulo){
 	cantidadDestinos = 0;
 	scrollearDestinos = 0;
 	limpiarResultadosCliente();
+	
+	gestorCliente.setAdmin(&gestorAdmin);
+	cantidadTramos = 0;
+	reservaExitosa = false;
 }
 
 InterfazGrafica::~InterfazGrafica(){
@@ -947,9 +951,14 @@ void InterfazGrafica::mostrarPantallaCliente(){
 	
 	// ---------- debajo del mapa ----------
 	Rectangle btnMaleta = {50, 520, 600, 50};
-	
+	Rectangle btnReservar = {360, 520, 290, 50};
+		
 	if(resultadoRuta.existe){
 		dibujarBotonOpcion(btnMaleta, "VER VIAJE DE LA MALETA", verMaleta);
+		
+		DrawRectangleRec(btnReservar, ORANGE);
+		DrawText("ELEGIR VUELOS", btnReservar.x + 50, btnReservar.y + 13, 24, WHITE);
+		
 		
 		if(verMaleta){
 			if(mismaRuta(resultadoRuta, rutaMaleta)){
@@ -1016,25 +1025,26 @@ void InterfazGrafica::mostrarPantallaCliente(){
 		
 		if(CheckCollisionPointRec(mouse, btnVolver)){
 			pantallaActual = PRINCIPAL;
-		}
-		else if(CheckCollisionPointRec(mouse, btnCosto)){
+		}else if(CheckCollisionPointRec(mouse, btnCosto)){
 			criterioBusqueda = POR_COSTO;
 			limpiarResultadosCliente();
-		}
-		else if(CheckCollisionPointRec(mouse, btnTiempo)){
+		}else if(CheckCollisionPointRec(mouse, btnTiempo)){
 			criterioBusqueda = POR_TIEMPO;
 			limpiarResultadosCliente();
-		}
-		else if(CheckCollisionPointRec(mouse, btnBuscar)){
+		}else if(CheckCollisionPointRec(mouse, btnBuscar)){
+		
 			limpiarResultadosCliente();
 			buscarRutaCliente();
-		}
-		else if(CheckCollisionPointRec(mouse, btnDestinos)){
+		}else if(CheckCollisionPointRec(mouse, btnDestinos)){
+		
 			explorarDestinosCliente();
-		}
-		else if(resultadoRuta.existe && CheckCollisionPointRec(mouse, btnMaleta)){
+	
+		}else if(resultadoRuta.existe && CheckCollisionPointRec(mouse, btnReservar)){
+			prepararReserva();
+			pantallaActual = RESERVAR;
+		}else if(resultadoRuta.existe && CheckCollisionPointRec(mouse, btnMaleta)){
 			verMaleta = !verMaleta;
-		}	else if(mostrandoDestinos){
+		}else if(mostrandoDestinos){
 			// ver si toco alguna fila de la lista
 			for(int p = 0; p < FILAS_DESTINOS; p++){
 				int posicionLista = scrollearDestinos + p;
@@ -1462,8 +1472,8 @@ int InterfazGrafica::puntosDeRuta(ResultadoRuta& ruta, Vector2 puntos[]){
 
 
 // Mueve y dibuja una imagen sobre una ruta
-// rotar: si la imagen gira segun la direccion del tramo
-// desfaseY: para correrla un poco hacia abajo y que no tape a otra
+// rotar si la imagen gira segun la direccion del tramo
+// desfaseY para correrla un poco hacia abajo y que no tape a otra
 void InterfazGrafica::dibujarViajero(ResultadoRuta& ruta, Animacion& animacion, Texture2D textura, bool rotar, float desfaseY){
 	if(!ruta.existe){
 		return;
@@ -1502,6 +1512,205 @@ void InterfazGrafica::dibujarViajero(ResultadoRuta& ruta, Animacion& animacion, 
 	DrawTexturePro(textura, parteImagen, destino, centro, angulo, WHITE);
 }
 
+// reservar viaje
+
+// Arma una lista desplegable por cada tramo de la ruta, con sus vuelos.
+// Se llama al entrar a la pantalla y despues de reservar (para actualizar cupos).
+void InterfazGrafica::prepararReserva(){
+	mensajeReserva = "";
+	reservaExitosa = false;
+	
+	cantidadTramos = resultadoRuta.largo - 1;
+	
+	if(cantidadTramos > MAX_TRAMOS){
+		mensajeReserva = "La ruta tiene demasiadas escalas para reservar.";
+		cantidadTramos = 0;
+		return;
+	}
+	
+	Grafo* grafo = gestorAdmin.getGrafo();
+	
+	for(int k = 0; k < cantidadTramos; k++){
+		Ciudad desde;
+		Ciudad hasta;
+		grafo->obtenerCiudadPorIndice(resultadoRuta.camino[k], desde);
+		grafo->obtenerCiudadPorIndice(resultadoRuta.camino[k + 1], hasta);
+		
+		listasTramos[k] = ListaDesplegable(50, 185 + k * 85, 600, 35);
+		
+		Vuelo vuelos[50];
+		int cantidad = gestorCliente.buscarVuelosDeTramo(desde.getId(), hasta.getId(), vuelos);
+		
+		cantidadVuelosTramo[k] = cantidad;
+		
+		for(int v = 0; v < cantidad; v++){
+			codigosTramo[k][v] = vuelos[v].codigo;
+			
+			// texto de la opcion: codigo - placa marca modelo - cupos
+			string texto = vuelos[v].codigo + " - " + vuelos[v].placaAeronave;
+			
+			Aeronave aeronave;
+			if(gestorCliente.obtenerAeronave(vuelos[v].placaAeronave, aeronave)){
+				texto = texto + " " + aeronave.marca + " " + aeronave.modelo;
+			}
+			
+			texto = texto + " - " + to_string(gestorCliente.cuposDisponibles(vuelos[v])) + " cupos";
+			
+			listasTramos[k].agregarOpcion(texto);
+		}
+	}
+}
+
+
+void InterfazGrafica::mostrarPantallaReservar(){
+	
+	ClearBackground(WHITE);
+	
+	// encabezado
+	Rectangle encabezado = {0, 0, 1300, 70};
+	DrawRectangleRec(encabezado, BLUE);
+	DrawText("Reservar viaje", 520, 10, 40, WHITE);
+	
+	Rectangle btnVolver = {10, 10, 150, 50};
+	DrawRectangleLinesEx(btnVolver, 2, WHITE);
+	DrawText("VOLVER", 25, 25, 25, WHITE);
+	
+	string ruta = "Ruta: " + textoRuta(resultadoRuta);
+	DrawText(ruta.c_str(), 50, 95, 22, DARKBLUE);
+	
+	// ---------- tramos (izquierda) ----------
+	Grafo* grafo = gestorAdmin.getGrafo();
+	
+	for(int k = 0; k < cantidadTramos; k++){
+		Ciudad desde;
+		Ciudad hasta;
+		grafo->obtenerCiudadPorIndice(resultadoRuta.camino[k], desde);
+		grafo->obtenerCiudadPorIndice(resultadoRuta.camino[k + 1], hasta);
+		
+		string titulo = "Tramo " + to_string(k + 1) + ": " + desde.getNombre() + " -> " + hasta.getNombre();
+		DrawText(titulo.c_str(), 50, 160 + k * 85, 20, BLACK);
+		
+		if(cantidadVuelosTramo[k] == 0){
+			DrawText("No hay vuelos registrados para este tramo.", 50, 190 + k * 85, 20, RED);
+		}
+	}
+	
+	// ---------- datos del pasajero (derecha) ----------
+	DrawText("Datos del pasajero", 750, 150, 24, DARKBLUE);
+	DrawText("Identificacion", 750, 195, 20, BLACK);
+	DrawText("Nombre", 750, 285, 20, BLACK);
+	
+	Rectangle cajas[2] = {{750, 220, 450, 45}, {750, 310, 450, 45}};
+	editarCampos(camposReserva, cajas, 2, campoReservaActivo);
+	
+	Rectangle btnConfirmar = {750, 390, 450, 55};
+	DrawRectangleRec(btnConfirmar, DARKGREEN);
+	DrawText("CONFIRMAR VIAJE", 830, 405, 26, WHITE);
+	
+	if(reservaExitosa){
+		DrawText(mensajeReserva.c_str(), 750, 465, 20, DARKGREEN);
+	}
+	else{
+		DrawText(mensajeReserva.c_str(), 750, 465, 20, RED);
+	}
+	
+	// la maleta, si viaja por otra ruta
+	if(rutaMaleta.existe && !mismaRuta(resultadoRuta, rutaMaleta)){
+		DrawText("Su maleta viajara por la ruta mas barata:", 750, 520, 18, PURPLE);
+		DrawText(textoRuta(rutaMaleta).c_str(), 750, 545, 18, PURPLE);
+	}
+	
+	// ---------- listas desplegables ----------
+	// si hay una abierta, solo esa recibe clics
+	int abierta = -1;
+	
+	for(int k = 0; k < cantidadTramos; k++){
+		if(listasTramos[k].estaAbierta()){
+			abierta = k;
+		}
+	}
+	
+	if(abierta != -1){
+		listasTramos[abierta].actualizar();
+	}
+	else{
+		for(int k = 0; k < cantidadTramos; k++){
+			if(cantidadVuelosTramo[k] > 0){
+				listasTramos[k].actualizar();
+			}
+		}
+	}
+	
+	bool hayListaAbierta = false;
+	
+	for(int k = 0; k < cantidadTramos; k++){
+		if(listasTramos[k].estaAbierta()){
+			hayListaAbierta = true;
+		}
+	}
+	
+	// ---------- clics ----------
+	if(!hayListaAbierta && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
+		Vector2 mouse = GetMousePosition();
+		
+		if(CheckCollisionPointRec(mouse, btnVolver)){
+			pantallaActual = CLIENTE;
+		}
+		else if(CheckCollisionPointRec(mouse, btnConfirmar)){
+			confirmarReserva();
+		}
+	}
+	
+	// listas al final y de abajo hacia arriba,
+	// para que una lista abierta quede encima de las de abajo
+	for(int k = cantidadTramos - 1; k >= 0; k--){
+		if(cantidadVuelosTramo[k] > 0){
+			listasTramos[k].dibujar();
+		}
+	}
+}
+
+
+// Junta los vuelos escogidos y le pide al gestor que reserve
+void InterfazGrafica::confirmarReserva(){
+	reservaExitosa = false;
+	
+	if(cantidadTramos == 0){
+		mensajeReserva = "No hay tramos para reservar.";
+		return;
+	}
+	
+	string codigos[MAX_TRAMOS];
+	
+	for(int k = 0; k < cantidadTramos; k++){
+		if(cantidadVuelosTramo[k] == 0){
+			mensajeReserva = "Hay un tramo sin vuelos, no se puede reservar.";
+			return;
+		}
+		
+		int seleccion = listasTramos[k].getSeleccionada();
+		
+		if(seleccion == -1){
+			mensajeReserva = "Seleccione un vuelo para el tramo " + to_string(k + 1) + ".";
+			return;
+		}
+		
+		codigos[k] = codigosTramo[k][seleccion];
+	}
+	
+	string mensaje;
+	bool reservado = gestorCliente.reservarViaje(camposReserva[0], camposReserva[1], codigos, cantidadTramos, mensaje);
+	
+	if(reservado){
+		camposReserva[0] = "";
+		camposReserva[1] = "";
+		prepararReserva();    // para que se vean los cupos actualizados
+	}
+	
+	// despues de prepararReserva, que borra el mensaje
+	reservaExitosa = reservado;
+	mensajeReserva = mensaje;
+}
 
 void InterfazGrafica::empezar(){
 
@@ -1539,7 +1748,9 @@ void InterfazGrafica::empezar(){
 			mostrarPantallaCliente();
 		}else if (pantallaActual == CREDITOS){
 			mostrarPantallaCreditos();
-		}
+		}else if(pantallaActual == RESERVAR){
+		mostrarPantallaReservar();
+	}
 
 
 		EndDrawing();
