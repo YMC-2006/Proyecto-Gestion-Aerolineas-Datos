@@ -23,7 +23,8 @@ private:
 	ArbolPasajeros arbolPasajeros;
 
 public:
-	GestorAdministrativo(bool cargarInicial = true);
+	GestorAdministrativo();
+	GestorAdministrativo(bool cargarInicial);
 	~GestorAdministrativo();
 
 	bool registrarCiudad(int id, string nombre);

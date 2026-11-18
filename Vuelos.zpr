@@ -69,6 +69,10 @@ open=false
 path=Animacion.cpp
 cursor=0:0
 open=false
+[source]
+path=CargaArchivo.cpp
+cursor=0:0
+open=false
 [header]
 path=ArbolExpansion.h
 cursor=0:0

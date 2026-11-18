@@ -2,6 +2,7 @@
 
 #include <cctype>
 #include <cmath>
+#include <fstream>
 
 //auxiliares para manejo de texto escritos
 string limpiarTexto(string texto){
@@ -37,6 +38,8 @@ string minusculas(string texto){
 
 //propios de la clase
 
+GestorAdministrativo::GestorAdministrativo() : GestorAdministrativo(true){}
+
 GestorAdministrativo::GestorAdministrativo(bool cargarInicial){
 	cantidadAeronaves = 0;
 	cantidadVuelos = 0;
@@ -45,7 +48,10 @@ GestorAdministrativo::GestorAdministrativo(bool cargarInicial){
 	if(cargarInicial){
 		int registros;
 		string mensaje;
-		cargarArchivo("datos/ejemplo.txt", registros, mensaje);
+		// ZinjaI puede ejecutar desde la raiz del proyecto o desde Debug.
+		ifstream archivo("datos/ejemplo.txt");
+		if(archivo.is_open()) cargarArchivo("datos/ejemplo.txt", registros, mensaje);
+		else cargarArchivo("../datos/ejemplo.txt", registros, mensaje);
 	}
 }
 
