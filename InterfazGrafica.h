@@ -8,6 +8,7 @@
 #include "Criterio.h"
 #include "GestorCliente.h"
 #include "ResultadoRuta.h"
+#include "Animacion.h"
 
 class InterfazGrafica {
 	
@@ -77,11 +78,15 @@ private:
 	ListaDesplegable comboDestino;
 	
 	
-	// Texto
+	// animaciones
+	Texture2D texAvion;
+	Texture2D texMaleta;
+	Animacion animAvion;
+	Animacion animMaleta;
 	
+	int puntosDeRuta(ResultadoRuta& ruta, Vector2 puntos[]);
+	void dibujarViajero(ResultadoRuta& ruta, Animacion& animacion, Texture2D textura, bool rotar, float desfaseY);
 	
-	Music musica;
-	bool musicaActiva = false;
 	
 	
 	void cargarAssets();

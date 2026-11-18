@@ -14,6 +14,7 @@ InterfazGrafica::InterfazGrafica(int ancho, int alto,const char* titulo){
 	altoPantalla = alto;
 
 	InitWindow(anchoPantalla, altoPantalla, titulo);
+	SetTargetFPS(60);
 	InitAudioDevice();
 	cargarAssets();
 
@@ -40,12 +41,19 @@ void InterfazGrafica::cargarAssets(){
 	fondo = LoadTexture("assets/fondoPantallaPrincipal.png");
 	fondoRegistros=LoadTexture("assets/vistaConCuadritoParaRegistros.png");
 	fondoCreditos = LoadTexture("assets/fondoCreditos.png");
+	
+	
+	texAvion = LoadTexture("assets/avion.png");
+	texMaleta = LoadTexture("assets/maleta.png");
 }
 
 void InterfazGrafica::liberarAssets(){
 	UnloadTexture(fondo);
 	UnloadTexture(fondoRegistros);
 	UnloadTexture(fondoCreditos);
+	
+	UnloadTexture(texAvion);
+	UnloadTexture(texMaleta);
 }
 
 // Un solo campo recibe el teclado. Tab cambia al siguiente.
@@ -1019,8 +1027,7 @@ void InterfazGrafica::mostrarPantallaCliente(){
 		}
 		else if(resultadoRuta.existe && CheckCollisionPointRec(mouse, btnMaleta)){
 			verMaleta = !verMaleta;
-		}
-		else if(mostrandoDestinos){
+		}	else if(mostrandoDestinos){
 			// ver si toco alguna fila de la lista
 			for(int p = 0; p < FILAS_DESTINOS; p++){
 				int posicionLista = scrollearDestinos + p;
@@ -1034,11 +1041,13 @@ void InterfazGrafica::mostrarPantallaCliente(){
 					
 					if(distExplorar[ciudadIndice] != INFINITO){
 						gestorCliente.armarCamino(origenExplorado, ciudadIndice, previoExplorar, distExplorar, rutaExplorada);
+						animAvion.reiniciar();
 					}
-				}
+				}	
 			}
 		}
 	}
+	
 	
 	// las listas van de ultimo para que queden encima de todo
 	comboDestino.dibujar();
@@ -1095,7 +1104,13 @@ void InterfazGrafica::dibujarMapaCliente(){
 	DrawRectangleRoundedLines(mapaCliente, 0.05, 0, 2, DARKBLUE);
 	
 	dibujarRutasMapa();
+	if(verMaleta){
+		dibujarViajero(rutaMaleta, animMaleta, texMaleta, false, 16);
+	}
 	
+	dibujarViajero(resultadoRuta, animAvion, texAvion, true, 0);
+	dibujarViajero(rutaExplorada, animAvion, texAvion, true, 0);
+
 	// la maleta va primero y mas gruesa, para que se vea debajo del pasajero
 	if(verMaleta){
 		dibujarRutaEnMapa(rutaMaleta, PURPLE, 10);
@@ -1292,6 +1307,10 @@ void InterfazGrafica::limpiarResultadosCliente(){
 	
 	mostrandoDestinos = false;
 	rutaExplorada.existe = false;
+	
+	// reiniciamoso las animaciones
+	animAvion.reiniciar();
+	animMaleta.reiniciar();
 }
 
 
@@ -1418,7 +1437,63 @@ void InterfazGrafica::mostrarPantallaCreditos(){
 }
 
 
+// ========================= ANIMACIONES
 
+// Convierte las ciudades de una ruta en puntos de la pantalla
+int InterfazGrafica::puntosDeRuta(ResultadoRuta& ruta, Vector2 puntos[]){
+	Grafo* grafo = gestorAdmin.getGrafo();
+	
+	for(int k = 0; k < ruta.largo; k++){
+		Ciudad ciudad;
+		grafo->obtenerCiudadPorIndice(ruta.camino[k], ciudad);
+		
+		puntos[k] = posicionEnMapa(ciudad);
+	}
+	
+	return ruta.largo;
+}
+
+
+// Mueve y dibuja una imagen sobre una ruta
+// rotar: si la imagen gira segun la direccion del tramo
+// desfaseY: para correrla un poco hacia abajo y que no tape a otra
+void InterfazGrafica::dibujarViajero(ResultadoRuta& ruta, Animacion& animacion, Texture2D textura, bool rotar, float desfaseY){
+	if(!ruta.existe){
+		return;
+	}
+	
+	Vector2 puntos[Grafo::N];
+	int cantidad = puntosDeRuta(ruta, puntos);
+	
+	animacion.actualizar(puntos, cantidad);
+	
+	Vector2 posicion;
+	float angulo;
+	
+	if(!animacion.obtenerPosicion(puntos, cantidad, posicion, angulo)){
+		return;
+	}
+	
+	posicion.y += desfaseY;
+	
+	if(!rotar){
+		angulo = 0;
+	}
+	
+	if(textura.id == 0){
+		DrawCircleV(posicion, 8, BLACK);
+		return;
+	}
+	
+	float ancho = textura.width;
+	float alto = textura.height;
+	
+	Rectangle parteImagen = {0, 0, ancho, alto};                  // que parte de la imagen usar (toda)
+	Rectangle destino = {posicion.x, posicion.y, ancho, alto};    // donde dibujarla
+	Vector2 centro = {ancho / 2, alto / 2};                       // gira sobre su centro
+	
+	DrawTexturePro(textura, parteImagen, destino, centro, angulo, WHITE);
+}
 
 
 void InterfazGrafica::empezar(){
